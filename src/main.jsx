@@ -1,24 +1,11 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { ConfigProvider } from 'antd'
-import App from './App.jsx'
-import './index.css'
+import { HashRouter } from "react-router-dom";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <ConfigProvider
-        theme={{
-          token: {
-            colorPrimary: '#C6A969',
-            colorBgContainer: '#FFFFFF',
-            borderRadius: 0,
-          },
-        }}
-      >
+    <HashRouter>
+      <ConfigProvider theme={{ token: { colorPrimary: "#C6A969", colorBgContainer: "#FFFFFF", borderRadius: 0 } }}>
         <App />
       </ConfigProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
-)
+    </HashRouter>
+  </React.StrictMode>
+);
