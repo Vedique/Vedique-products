@@ -27,7 +27,7 @@ const ProductPage = () => {
 
   const handleContactOrder = () => {
     const messageText = `Hi, I would like to order ${product.name}`
-    window.open(`https://wa.me/8015154989?text=${encodeURIComponent(messageText)}`, '_blank')
+    window.open(`https://wa.me/918015154989?text=${encodeURIComponent(messageText)}`, '_blank')
   }
 
   const nextImage = () => {
