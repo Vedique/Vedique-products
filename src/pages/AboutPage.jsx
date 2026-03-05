@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform, useInView, useMotionValue, useMotionTemplate, AnimatePresence} from "framer-motion";
+import { motion, useScroll, useTransform, useInView, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import naturalImg from "../assets/images/About/natural-ingredients.jpg";
 import heroImg from "../assets/images/About/vedique-hero.jpg";
@@ -159,88 +159,14 @@ const AboutPage = () => {
         style={{ scaleX: globalScroll, transformOrigin: "left" }}
       />
 
-      {/* Navbar - Desktop + Mobile Drawer */}
-      <motion.nav
-        initial={{ y: -80 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: [0.215, 0.61, 0.355, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 px-6 py-5 md:px-12 flex items-center justify-between bg-background/95 backdrop-blur-xl border-b border-border/50"
-      >
-        <span className="font-heading text-3xl font-medium tracking-[-0.02em]">vedique</span>
-
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-10 text-xs tracking-[0.25em] uppercase font-medium text-muted-foreground">
-          <a href="#" className="hover:text-foreground transition-colors">shop</a>
-          <a href="#" className="hover:text-foreground transition-colors">rituals</a>
-          <a href="#" className="text-primary font-semibold">about</a>
-          <a href="#" className="hover:text-foreground transition-colors">contact</a>
-        </div>
-
-        {/* Mobile Hamburger */}
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden w-9 h-9 flex items-center justify-center z-50"
-          aria-label="Toggle menu"
-        >
-          <motion.div
-            animate={isMenuOpen ? "open" : "closed"}
-            className="space-y-1.5"
-          >
-            <motion.span
-              className="block h-px w-6 bg-foreground"
-              variants={{ closed: { rotate: 0, y: 0 }, open: { rotate: 45, y: 6 } }}
-            />
-            <motion.span
-              className="block h-px w-6 bg-foreground"
-              variants={{ closed: { opacity: 1 }, open: { opacity: 0 } }}
-            />
-            <motion.span
-              className="block h-px w-6 bg-foreground"
-              variants={{ closed: { rotate: 0, y: 0 }, open: { rotate: -45, y: -6 } }}
-            />
-          </motion.div>
-        </button>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, x: "100%" }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed inset-0 bg-background z-40 md:hidden pt-24 px-8"
-            >
-              <div className="flex flex-col gap-8 text-3xl font-light tracking-tight">
-                {["shop", "rituals", "about", "contact"].map((item, i) => (
-                  <motion.a
-                    key={i}
-                    href="#"
-                    onClick={() => setIsMenuOpen(false)}
-                    initial={{ opacity: 0, x: 40 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className={`${item === "about" ? "text-primary" : ""} hover:text-primary transition-colors`}
-                  >
-                    {item}
-                  </motion.a>
-                ))}
-              </div>
-              <div className="mt-auto absolute bottom-12 text-xs text-muted-foreground tracking-widest">
-                ancient wisdom • now in your pocket
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 pt-20 md:pt-0 overflow-hidden">
+      <section className="relative min-h-[70vh] md:min-h-screen flex items-center justify-center px-6 pt-40 md:pt-48 overflow-hidden">
         <motion.div
           className="absolute inset-0 bg-[radial-gradient(#e5e5e5_0.8px,transparent_1px)] bg-[length:4px_4px] opacity-30"
           style={{ y: useTransform(globalScroll, [0, 1], ["0%", "-20%"]) }}
         />
-        
+
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <motion.div variants={staggerContainer} initial="hidden" animate="visible">
             <motion.p
@@ -250,16 +176,16 @@ const AboutPage = () => {
             >
               the story behind the jar
             </motion.p>
-            
+
             <motion.h1
               variants={fadeUp}
               custom={1}
-              className="text-6xl md:text-7xl lg:text-[5.5rem] leading-[1.05] font-light font-heading tracking-[-0.03em]"
+              className="text-4xl md:text-7xl lg:text-[5.5rem] leading-[1.1] font-light font-heading tracking-[-0.03em]"
             >
               got tired of wellness<br className="hidden md:block" />
-              being <motion.span 
-                className="italic text-primary relative inline-block" 
-                whileHover={{ scale: 1.08, rotate: -2 }}
+              {" "}being <motion.span
+                className="italic text-primary relative inline-block"
+                whileHover={{ scale: 1.05, rotate: -1 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >complicated.</motion.span>
             </motion.h1>
@@ -390,17 +316,17 @@ const AboutPage = () => {
       <section className="px-6 py-20 md:py-32 bg-card">
         <div className="max-w-5xl mx-auto">
           <p className="uppercase text-primary text-xs tracking-[0.4em] font-medium mb-10">what we believe in</p>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {principles.map((p, i) => (
               <TiltCard key={i}>
                 <span className="font-heading text-[9rem] font-light text-border/70 block -mt-6 -ml-3 select-none">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                
+
                 <h3 className="font-heading text-3xl font-light mb-4 tracking-tight">{p.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6">{p.desc}</p>
-                
+
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   whileHover={{ opacity: 1, height: "auto" }}
@@ -422,7 +348,7 @@ const AboutPage = () => {
           style={{ scale: useTransform(globalScroll, [0.7, 1], [1, 1.15]) }}
         />
         <div className="absolute inset-0 bg-black/60" />
-        
+
         <motion.p
           initial={{ opacity: 0, y: 60 }}
           whileInView={{ opacity: 1, y: 0 }}

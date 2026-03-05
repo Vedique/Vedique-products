@@ -449,7 +449,6 @@ const FeaturedProducts = () => {
             <motion.button
               style={{
                 background: 'linear-gradient(145deg, #2c5f2d 0%, #1e4d2e 100%)',
-                border: 'none',
                 color: 'white',
                 padding: isMobile ? '0.6rem 1.6rem' : '0.9rem 3rem',
                 fontSize: isMobile ? '0.7rem' : '0.95rem',

@@ -1,14 +1,74 @@
 // Header.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaInstagram, FaYoutube, FaFacebookF } from "react-icons/fa";
-import { MenuOutlined, CloseOutlined, ShoppingOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useMotionTemplate,
+  useSpring,
+} from 'framer-motion';
+import { FaInstagram, FaYoutube, FaFacebookF } from 'react-icons/fa';
+import {
+  MenuOutlined,
+  CloseOutlined,
+  ShoppingOutlined,
+  SearchOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 
 const Header = () => {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+
+  const { scrollY } = useScroll();
+
+  const springConfig = { stiffness: 200, damping: 30, mass: 0.5 };
+
+  // ── Scroll-driven transforms ──────────────────────────────────────────────
+  const widthVal = useTransform(scrollY, [0, 100], [100, 94]);
+  const topValNum = useTransform(scrollY, [0, 100], [0, 16]);
+  const radiusNum = useTransform(scrollY, [0, 100], [0, 40]);
+  const paddingNum = useTransform(scrollY, [0, 100], [22, 10]);
+  const alphaNum = useTransform(scrollY, [0, 60], [1, 0.94]);
+  const shadowNum = useTransform(scrollY, [20, 100], [0, 0.15]);
+  const blurNum = useTransform(scrollY, [0, 80], [0, 16]);
+  const scaleNum = useTransform(scrollY, [0, 100], [1, 0.98]);
+
+  // Apply individual springs for ultra-smooth property-level animation
+  const widthSpring = useSpring(widthVal, springConfig);
+  const topSpring = useSpring(topValNum, springConfig);
+  const radiusSpring = useSpring(radiusNum, springConfig);
+  const paddingSpring = useSpring(paddingNum, springConfig);
+  const alphaSpring = useSpring(alphaNum, springConfig);
+  const shadowSpring = useSpring(shadowNum, springConfig);
+  const blurSpring = useSpring(blurNum, springConfig);
+  const scaleSpring = useSpring(scaleNum, springConfig);
+
+  const width = useMotionTemplate`${widthSpring}%`;
+  const topVal = useMotionTemplate`${topSpring}px`;
+  const borderRadius = useMotionTemplate`${radiusSpring}px`;
+  const paddingY = useMotionTemplate`${paddingSpring}px`;
+  const bgAlpha = alphaSpring;
+  const shadowAlpha = shadowSpring;
+  const blur = blurSpring;
+  const scale = scaleSpring;
+
+  // Template strings for CSS values
+  const background = useMotionTemplate`rgba(246,241,232,${bgAlpha})`;
+  const boxShadow = useMotionTemplate`0 8px 45px rgba(20,45,20,${shadowAlpha}), 0 2px 12px rgba(0,0,0,0.06)`;
+  const backdropFilter = useMotionTemplate`blur(${blur}px)`;
+  const padding = useMotionTemplate`${paddingY} clamp(20px, 4vw, 40px)`;
+
+  // Determine mobile status for layout tweaks
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  useEffect(() => {
+    const checkSize = () => setIsSmallScreen(window.innerWidth < 1025);
+    checkSize();
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
 
   const menuItems = [
     { key: 'home', label: 'Home', path: '/' },
@@ -17,571 +77,480 @@ const Header = () => {
     { key: 'contact', label: 'Contact', path: '/contact' },
   ];
 
+  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [mobileMenuOpen]);
 
-  const isActive = (path) => {
-    if (path === '/') {
-      return location.pathname === '/';
-    }
-    return location.pathname.startsWith(path);
-  };
+  const isActive = (path) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   const closeMenu = () => setMobileMenuOpen(false);
 
-  // Faster animation variants
-  const menuVariants = {
-    hidden: { x: '100%' },
-    visible: { 
-      x: 0,
-      transition: { 
-        type: 'tween',
-        duration: 0.3,
-        ease: 'easeInOut'
-      }
-    },
-    exit: { 
-      x: '100%',
-      transition: { 
-        type: 'tween',
-        duration: 0.25,
-        ease: 'easeInOut'
-      }
-    }
-  };
+  // ── Animation variants ────────────────────────────────────────────────────
 
-  const overlayVariants = {
+  // Backdrop
+  const backdropVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: { opacity: 1, transition: { duration: 0.25 } },
+    exit: { opacity: 0, transition: { duration: 0.2 } },
+  };
+
+  // Top-anchored floating card (drops from header)
+  const mobileMenuVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: -20 },
+    visible: {
       opacity: 1,
-      transition: { duration: 0.2 }
+      scale: 1,
+      y: 0,
+      transition: { type: 'spring', stiffness: 350, damping: 30 },
     },
-    exit: { 
+    exit: {
       opacity: 0,
-      transition: { duration: 0.2 }
-    }
+      scale: 0.95,
+      y: -15,
+      transition: { duration: 0.2 },
+    },
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, x: 20 },
-    visible: (i) => ({
-      opacity: 1,
-      x: 0,
-      transition: {
-        delay: i * 0.03,
-        duration: 0.2
-      }
-    })
+  // Staggered nav items
+  const navContainerVariants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
+    exit: { transition: { staggerChildren: 0.03, staggerDirection: -1 } },
   };
 
-  const headerStyles = {
-    header: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 1000,
-      padding: scrolled ? '8px 0' : '16px 0',
-      background: scrolled 
-        ? 'rgba(255, 255, 255, 0.98)' 
-        : 'rgba(245, 255, 240, 0.95)',
-      backdropFilter: 'blur(10px)',
-      transition: 'all 0.3s ease',
-      borderBottom: '1px solid rgba(100, 150, 100, 0.15)',
-      boxShadow: scrolled ? '0 4px 20px rgba(0, 30, 0, 0.1)' : 'none'
-    },
-    container: {
-      maxWidth: '1400px',
-      margin: '0 auto',
-      padding: '0 clamp(16px, 5vw, 40px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between'
-    },
-    logoContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      textDecoration: 'none',
-      flexShrink: 0
-    },
-    logoText: {
-      fontSize: 'clamp(1.4rem, 4vw, 2rem)',
-      fontWeight: 700,
-      color: '#2c5e2c',
-      letterSpacing: '0.5px',
-      lineHeight: 1.2
-    },
-    logoTagline: {
-      fontSize: 'clamp(0.55rem, 1.5vw, 0.7rem)',
-      color: '#5a8f5a',
-      letterSpacing: 'clamp(1px, 2vw, 3px)',
-      textTransform: 'uppercase',
-      whiteSpace: 'nowrap'
-    },
-    nav: {
-      display: 'flex',
-      gap: 'clamp(20px, 3vw, 40px)',
-      margin: '0 clamp(10px, 2vw, 20px)'
-    },
-    navLink: {
-      color: '#2c5e2c',
-      textDecoration: 'none',
-      fontSize: 'clamp(0.85rem, 1.5vw, 0.95rem)',
-      fontWeight: 500,
-      letterSpacing: '0.3px',
-      padding: '6px 0',
-      position: 'relative',
-      whiteSpace: 'nowrap'
-    },
-    navLinkActive: {
-      color: '#1e3e1e',
-      fontWeight: 600
-    },
-    navUnderline: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      width: '100%',
-      height: '2px',
-      background: '#4caf4c',
-      transform: 'scaleX(0)',
-      transition: 'transform 0.3s ease',
-      transformOrigin: 'right'
-    },
-    navUnderlineActive: {
-      transform: 'scaleX(1)',
-      transformOrigin: 'left'
-    },
-    actions: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 'clamp(15px, 2vw, 25px)',
-      flexShrink: 0
-    },
-    actionIcon: {
-      color: '#2c5e2c',
-      fontSize: 'clamp(1.1rem, 2vw, 1.2rem)',
-      cursor: 'pointer',
-      transition: 'color 0.2s ease'
-    },
-    cartBadge: {
-      position: 'relative',
-      display: 'inline-block'
-    },
-    cartCount: {
-      position: 'absolute',
-      top: '-8px',
-      right: '-8px',
-      background: '#4caf4c',
-      color: '#ffffff',
-      fontSize: '0.65rem',
-      fontWeight: 600,
-      width: '18px',
-      height: '18px',
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    // Mobile styles
-    mobileHeader: {
-      display: 'none',
-      width: '100%',
-      alignItems: 'center',
-      justifyContent: 'space-between'
-    },
-    mobileMenuBtn: {
-      background: 'none',
-      border: 'none',
-      color: '#2c5e2c',
-      fontSize: '1.5rem',
-      cursor: 'pointer',
-      padding: '8px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'color 0.2s ease'
-    },
-    mobileMenuOverlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(30, 50, 30, 0.7)',
-      backdropFilter: 'blur(5px)',
-      zIndex: 1001
-    },
-    mobileMenu: {
-      position: 'fixed',
-      top: 0,
-      right: 0,
-      width: 'min(400px, 85%)',
-      height: '100vh',
-      background: '#ffffff',
-      zIndex: 1002,
-      padding: 'clamp(20px, 5vh, 30px)',
-      display: 'flex',
-      flexDirection: 'column',
-      boxShadow: '-5px 0 25px rgba(0, 30, 0, 0.15)'
-    },
-    mobileMenuHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 'clamp(20px, 4vh, 30px)',
-      paddingBottom: '15px',
-      borderBottom: '1px solid rgba(100, 150, 100, 0.2)'
-    },
-    mobileMenuLogo: {
-      display: 'flex',
-      flexDirection: 'column',
-      textDecoration: 'none'
-    },
-    mobileMenuLogoText: {
-      fontSize: 'clamp(1.5rem, 5vw, 1.8rem)',
-      fontWeight: 700,
-      color: '#2c5e2c',
-      lineHeight: 1.2
-    },
-    mobileMenuTagline: {
-      fontSize: 'clamp(0.6rem, 2vw, 0.65rem)',
-      color: '#5a8f5a',
-      letterSpacing: '2px',
-      textTransform: 'uppercase'
-    },
-    mobileMenuClose: {
-      background: 'none',
-      border: 'none',
-      color: '#2c5e2c',
-      fontSize: '1.5rem',
-      cursor: 'pointer',
-      padding: '8px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'color 0.2s ease',
-      width: '40px',
-      height: '40px'
-    },
-    mobileNav: {
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '5px',
-      overflowY: 'auto'
-    },
-    mobileNavLink: {
-      color: '#2c5e2c',
-      textDecoration: 'none',
-      fontSize: 'clamp(1rem, 4vw, 1.1rem)',
-      fontWeight: 500,
-      padding: '15px 0',
-      borderBottom: '1px solid rgba(100, 150, 100, 0.1)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      transition: 'color 0.2s ease'
-    },
-    mobileNavLinkActive: {
-      color: '#1e3e1e',
-      fontWeight: 600
-    },
-    mobileNavIcon: {
-      color: '#4caf4c',
-      fontSize: '1rem',
-      opacity: 0.7
-    },
-    mobileActionIcons: {
-      display: 'flex',
-      gap: '25px',
-      justifyContent: 'center',
-      margin: '20px 0'
-    },
-    mobileMenuFooter: {
-      marginTop: 'auto',
-      paddingTop: '20px',
-      borderTop: '1px solid rgba(100, 150, 100, 0.2)',
-      textAlign: 'center'
-    },
-    mobileSocialLinks: {
-      display: 'flex',
-      gap: '25px',
-      justifyContent: 'center',
-      marginBottom: '15px'
-    },
-    mobileCopyright: {
-      color: '#8aa88a',
-      fontSize: 'clamp(0.7rem, 2vw, 0.75rem)',
-      lineHeight: 1.6
-    }
+  const navItemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 250, damping: 25 } },
+    exit: { opacity: 0, y: 8, transition: { duration: 0.15 } },
   };
 
-  // Responsive CSS
+  // ── Responsive CSS ────────────────────────────────────────────────────────
   const mediaStyles = `
-    /* Large Desktop (1200px+) */
-    @media (min-width: 1200px) {
-      .header-container {
-        max-width: 1400px;
-      }
+    /* Desktop (>1024px): show desktop layout */
+    @media (min-width: 1025px) {
+      .hdr-mobile { display: none !important; }
     }
-
-    /* Desktop (1025px - 1199px) */
-    @media (min-width: 1025px) and (max-width: 1199px) {
-      .desktop-nav {
-        gap: 25px;
-      }
-    }
-
-    /* Tablet and Mobile (below 1025px) */
+    /* Mobile/Tablet (<1025px): hide desktop layout */
     @media (max-width: 1024px) {
-      .desktop-nav, 
-      .desktop-actions {
-        display: none !important;
-      }
-      
-      .desktop-logo {
-        display: none !important;
-      }
-      
-      .mobile-header {
-        display: flex !important;
-      }
+      .hdr-desktop-nav,
+      .hdr-desktop-actions,
+      .hdr-desktop-logo { display: none !important; }
+      .hdr-mobile { display: flex !important; }
     }
 
-    /* Tablet Landscape (768px - 1024px) */
-    @media (min-width: 768px) and (max-width: 1024px) {
-      .header-container {
-        padding: 0 30px !important;
-      }
+    /* Nav link hover underline */
+    .hdr-nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0;
+      width: 100%; height: 2px;
+      // background: linear-gradient(90deg, #2c5f2d, #4caf4c);
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform 0.3s ease;
+      border-radius: 2px;
+    }
+    .hdr-nav-link:hover::after,
+    .hdr-nav-link.active::after {
+      transform: scaleX(1);
+      transform-origin: left;
     }
 
-    /* Mobile (below 768px) */
-    @media (max-width: 767px) {
-      .header-container {
-        padding: 0 20px !important;
-      }
-    }
+    /* Mobile nav link hover */
+    .mob-nav-item:hover .mob-nav-label { color: #2c5f2d; }
+    .mob-nav-item:hover .mob-nav-arrow { transform: translateX(5px); color: #2c5f2d; }
+    .mob-nav-arrow { transition: transform 0.2s ease, color 0.2s ease; }
 
-    /* Small Mobile (below 480px) */
-    @media (max-width: 480px) {
-      .header {
-        padding: 6px 0 !important;
-      }
-      .logo-text {
-        font-size: 1.3rem !important;
-      }
-      .mobile-menu {
-        width: 90% !important;
-        padding: 20px 15px !important;
-      }
-      .mobile-action-icons {
-        gap: 20px !important;
-      }
-      .mobile-social-links {
-        gap: 20px !important;
-      }
-      .mobile-nav-link {
-        padding: 12px 0 !important;
-      }
+    /* Floating card glow pulse when open */
+    @keyframes cardGlow {
+      0%, 100% { box-shadow: 0 20px 60px rgba(44,95,45,0.18), 0 0 0 1px rgba(255,255,255,0.4); }
+      50%       { box-shadow: 0 24px 70px rgba(44,95,45,0.24), 0 0 0 1px rgba(255,255,255,0.5); }
     }
-
-    /* Extra Small Mobile (below 360px) */
-    @media (max-width: 360px) {
-      .logo-text {
-        font-size: 1.2rem !important;
-      }
-      .mobile-nav-link {
-        font-size: 0.95rem !important;
-        padding: 10px 0 !important;
-      }
-      .mobile-action-icons {
-        gap: 15px !important;
-      }
-      .mobile-menu-close {
-        font-size: 1.3rem !important;
-        width: 35px !important;
-        height: 35px !important;
-      }
-    }
+    .mob-menu-card { animation: cardGlow 3s ease-in-out infinite; }
   `;
 
   return (
     <>
       <style>{mediaStyles}</style>
+
+      {/* ── HEADER BAR ── */}
       <motion.header
-        style={headerStyles.header}
-        className="header"
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
+        style={{
+          position: 'fixed',
+          top: topVal,
+          left: '50%',
+          x: '-50%',
+          width,
+          scale,
+          zIndex: 1000,
+          borderRadius,
+          background,
+          backdropFilter,
+          WebkitBackdropFilter: backdropFilter,
+          boxShadow,
+          padding,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderBottom: 'none',
+          border: '1px solid rgba(44,95,45,0.08)',
+          overflow: 'hidden',
+        }}
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div style={headerStyles.container} className="header-container">
-          {/* Desktop Logo - Only visible on desktop */}
-          <Link to="/" style={headerStyles.logoContainer} className="desktop-logo">
-            <span style={headerStyles.logoText} className="logo-text">Vedique</span>
-            <span style={headerStyles.logoTagline} className="logo-tagline">Nourish • Thrive • Glow</span>
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '1400px',
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Link
+            to="/"
+            className="hdr-desktop-logo"
+            style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', flexShrink: 0 }}
+          >
+            <motion.span
+              style={{
+                fontSize: 'clamp(1.4rem, 3.5vw, 2rem)',
+                fontWeight: 700,
+                color: '#2c5f2d',
+                letterSpacing: '0.5px',
+                lineHeight: 1.2,
+              }}
+              whileHover={{ scale: 1.03 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            >
+              Vedique
+            </motion.span>
+            <span style={{
+              fontSize: 'clamp(0.5rem, 1.2vw, 0.68rem)',
+              color: '#5a8f5a',
+              letterSpacing: 'clamp(1px, 1.5vw, 3px)',
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+            }}>
+              Nourish • Thrive • Glow
+            </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav style={headerStyles.nav} className="desktop-nav">
+          {/* Desktop Nav */}
+          <nav className="hdr-desktop-nav" style={{ display: 'flex', gap: 'clamp(20px, 3vw, 40px)' }}>
             {menuItems.map((item) => (
               <Link
                 key={item.key}
                 to={item.path}
+                className={`hdr-nav-link${isActive(item.path) ? ' active' : ''}`}
                 style={{
-                  ...headerStyles.navLink,
-                  ...(isActive(item.path) ? headerStyles.navLinkActive : {})
+                  color: isActive(item.path) ? '#1e4d20' : '#2c5f2d',
+                  textDecoration: 'none',
+                  fontSize: 'clamp(0.82rem, 1.4vw, 0.95rem)',
+                  fontWeight: isActive(item.path) ? 600 : 500,
+                  letterSpacing: '0.3px',
+                  padding: '6px 0',
+                  position: 'relative',
+                  whiteSpace: 'nowrap',
+                  transition: 'color 0.2s ease',
                 }}
               >
                 {item.label}
-                <span style={{
-                  ...headerStyles.navUnderline,
-                  ...(isActive(item.path) ? headerStyles.navUnderlineActive : {})
-                }} />
               </Link>
             ))}
           </nav>
 
           {/* Desktop Actions */}
-          <div style={headerStyles.actions} className="desktop-actions">
-            <SearchOutlined style={headerStyles.actionIcon} />
-            <UserOutlined style={headerStyles.actionIcon} />
-            <div style={headerStyles.cartBadge}>
-              <ShoppingOutlined style={headerStyles.actionIcon} />
-              <span style={headerStyles.cartCount}>3</span>
-            </div>
+          <div
+            className="hdr-desktop-actions"
+            style={{ display: 'flex', alignItems: 'center', gap: 'clamp(14px, 2vw, 24px)', flexShrink: 0 }}
+          >
+            {[SearchOutlined, UserOutlined].map((Icon, i) => (
+              <motion.span key={i} whileHover={{ scale: 1.2, color: '#1e4d20' }} style={{ cursor: 'pointer' }}>
+                <Icon style={{ color: '#2c5f2d', fontSize: 'clamp(1.05rem, 1.8vw, 1.2rem)' }} />
+              </motion.span>
+            ))}
+            <motion.div
+              style={{ position: 'relative', display: 'inline-block', cursor: 'pointer' }}
+              whileHover={{ scale: 1.2 }}
+            >
+              <ShoppingOutlined style={{ color: '#2c5f2d', fontSize: 'clamp(1.05rem, 1.8vw, 1.2rem)' }} />
+              <span style={{
+                position: 'absolute', top: '-8px', right: '-8px',
+                background: 'linear-gradient(135deg, #2c5f2d, #4caf4c)',
+                color: '#fff', fontSize: '0.62rem', fontWeight: 700,
+                width: '17px', height: '17px', borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>3</span>
+            </motion.div>
           </div>
 
-          {/* Mobile Header - Only visible on mobile/tablet */}
-          <div style={headerStyles.mobileHeader} className="mobile-header">
-            <Link to="/" style={headerStyles.logoContainer}>
-              <span style={headerStyles.logoText} className="logo-text">Vedique</span>
+          {/* Mobile Header Row */}
+          <div
+            className="hdr-mobile"
+            style={{ display: 'none', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            <Link to="/" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none' }}>
+              <span style={{ fontSize: 'clamp(1.3rem, 5vw, 1.7rem)', fontWeight: 700, color: '#2c5f2d', lineHeight: 1.2 }}>
+                Vedique
+              </span>
             </Link>
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              style={headerStyles.mobileMenuBtn}
-              aria-label="Open menu"
-              onMouseEnter={(e) => e.currentTarget.style.color = '#1e3e1e'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#2c5e2c'}
-            >
-              <MenuOutlined />
-            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Cart badge */}
+              <div style={{ position: 'relative', cursor: 'pointer' }}>
+                <ShoppingOutlined style={{ color: '#2c5f2d', fontSize: '1.2rem' }} />
+                <span style={{
+                  position: 'absolute', top: '-6px', right: '-6px',
+                  background: 'linear-gradient(135deg, #2c5f2d, #4caf4c)',
+                  color: '#fff', fontSize: '0.58rem', fontWeight: 700,
+                  width: '15px', height: '15px', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>3</span>
+              </div>
+
+              <motion.button
+                onClick={() => setMobileMenuOpen(true)}
+                style={{
+                  background: 'rgba(44,95,45,0.08)',
+                  border: '1px solid rgba(44,95,45,0.15)',
+                  color: '#2c5f2d',
+                  fontSize: '1.1rem',
+                  cursor: 'pointer',
+                  padding: '7px 10px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backdropFilter: 'blur(8px)',
+                }}
+                whileHover={{ scale: 1.08, background: 'rgba(44,95,45,0.14)' }}
+                whileTap={{ scale: 0.94 }}
+                aria-label="Open menu"
+              >
+                <MenuOutlined />
+              </motion.button>
+            </div>
           </div>
         </div>
       </motion.header>
 
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence mode="wait">
+      {/* ── MOBILE MENU ── */}
+      <AnimatePresence>
         {mobileMenuOpen && (
           <>
+            {/* Backdrop */}
             <motion.div
-              style={headerStyles.mobileMenuOverlay}
-              variants={overlayVariants}
+              variants={backdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
               onClick={closeMenu}
+              style={{
+                position: 'fixed', inset: 0,
+                background: 'rgba(20, 40, 20, 0.55)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                zIndex: 1090,
+              }}
             />
+
+            {/* Anchored floating card */}
             <motion.div
-              style={headerStyles.mobileMenu}
-              className="mobile-menu"
-              variants={menuVariants}
+              className="mob-menu-card"
+              variants={mobileMenuVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
+              style={{
+                position: 'fixed',
+                top: '104px',
+                left: '2.5vw',
+                right: '2.5vw',
+                margin: '0 auto',
+                width: 'min(420px, 95vw)',
+                maxHeight: '82vh',
+                zIndex: 1100,
+                background: 'linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(246,241,232,0.98) 100%)',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                border: '1px solid rgba(255,255,255,0.8)',
+                boxShadow: '0 25px 60px -15px rgba(0,0,0,0.2)',
+              }}
             >
-              <div style={headerStyles.mobileMenuHeader}>
-                <Link to="/" style={headerStyles.mobileMenuLogo} onClick={closeMenu}>
-                  <span style={headerStyles.mobileMenuLogoText}>Vedique</span>
-                  <span style={headerStyles.mobileMenuTagline}>Nourish • Thrive • Glow</span>
+              {/* Card Header */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '22px 26px 18px',
+                borderBottom: '1px solid rgba(44,95,45,0.1)',
+                background: 'linear-gradient(135deg, rgba(44,95,45,0.04) 0%, rgba(184,134,11,0.03) 100%)',
+              }}>
+                <Link to="/" style={{ textDecoration: 'none' }} onClick={closeMenu}>
+                  <div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#2c5f2d', lineHeight: 1.1 }}>
+                      Vedique
+                    </div>
+                    <div style={{ fontSize: '0.6rem', color: '#5a8f5a', letterSpacing: '2.5px', textTransform: 'uppercase', marginTop: '2px' }}>
+                      Nourish • Thrive • Glow
+                    </div>
+                  </div>
                 </Link>
-                <button
+
+                <motion.button
                   onClick={closeMenu}
-                  style={headerStyles.mobileMenuClose}
-                  className="mobile-menu-close"
+                  style={{
+                    background: 'rgba(44,95,45,0.08)',
+                    border: '1px solid rgba(44,95,45,0.14)',
+                    color: '#2c5f2d',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    width: '38px', height: '38px',
+                    borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                  whileHover={{ scale: 1.12, background: 'rgba(44,95,45,0.15)', rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
                   aria-label="Close menu"
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#1e3e1e'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#2c5e2c'}
                 >
                   <CloseOutlined />
-                </button>
+                </motion.button>
               </div>
 
-              <nav style={headerStyles.mobileNav}>
-                {menuItems.map((item, index) => (
-                  <motion.div
-                    key={item.key}
-                    custom={index}
-                    variants={itemVariants}
-                    initial="hidden"
-                    animate="visible"
+              {/* Nav Items */}
+              <motion.nav
+                variants={navContainerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                style={{ overflowY: 'auto', padding: '12px 20px', flex: 1 }}
+              >
+                {menuItems.map((item, index) => {
+                  const active = isActive(item.path);
+                  return (
+                    <motion.div key={item.key} variants={navItemVariants}>
+                      <Link
+                        to={item.path}
+                        onClick={closeMenu}
+                        className="mob-nav-item"
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '14px 16px',
+                          marginBottom: '6px',
+                          borderRadius: '14px',
+                          textDecoration: 'none',
+                          background: active
+                            ? 'linear-gradient(135deg, rgba(44,95,45,0.1) 0%, rgba(76,175,76,0.07) 100%)'
+                            : 'transparent',
+                          border: active
+                            ? '1px solid rgba(44,95,45,0.15)'
+                            : '1px solid transparent',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{
+                            width: '6px', height: '6px', borderRadius: '50%',
+                            background: active
+                              ? 'linear-gradient(135deg, #2c5f2d, #4caf4c)'
+                              : 'rgba(44,95,45,0.25)',
+                            flexShrink: 0,
+                            transition: 'background 0.2s ease',
+                          }} />
+                          <span
+                            className="mob-nav-label"
+                            style={{
+                              fontSize: '1rem', fontWeight: active ? 600 : 500,
+                              color: active ? '#1e4d20' : '#2c5f2d',
+                              letterSpacing: '0.2px',
+                              transition: 'color 0.2s ease',
+                            }}
+                          >
+                            {item.label}
+                          </span>
+                        </div>
+                        <span
+                          className="mob-nav-arrow"
+                          style={{
+                            color: active ? '#2c5f2d' : '#9abf9a',
+                            fontSize: '0.85rem',
+                            fontWeight: 500,
+                          }}
+                        >→</span>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </motion.nav>
+
+              {/* Action Icons Row */}
+              <div style={{
+                display: 'flex', gap: '14px', justifyContent: 'center',
+                padding: '14px 20px 10px',
+                borderTop: '1px solid rgba(44,95,45,0.08)',
+              }}>
+                {[
+                  { Icon: SearchOutlined, label: 'Search' },
+                  { Icon: UserOutlined, label: 'Account' },
+                  { Icon: ShoppingOutlined, label: 'Cart' },
+                ].map(({ Icon, label }) => (
+                  <motion.button
+                    key={label}
+                    style={{
+                      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+                      background: 'rgba(44,95,45,0.05)',
+                      border: '1px solid rgba(44,95,45,0.1)',
+                      borderRadius: '12px', padding: '10px 8px',
+                      cursor: 'pointer', color: '#2c5f2d',
+                    }}
+                    whileHover={{ scale: 1.06, background: 'rgba(44,95,45,0.1)' }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <Link
-                      to={item.path}
-                      style={{
-                        ...headerStyles.mobileNavLink,
-                        ...(isActive(item.path) ? headerStyles.mobileNavLinkActive : {})
-                      }}
-                      onClick={closeMenu}
-                    >
-                      <span>{item.label}</span>
-                      <span style={headerStyles.mobileNavIcon}>→</span>
-                    </Link>
-                  </motion.div>
+                    <Icon style={{ fontSize: '1.15rem' }} />
+                    <span style={{ fontSize: '0.6rem', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                      {label}
+                    </span>
+                  </motion.button>
                 ))}
-              </nav>
-
-              <div style={headerStyles.mobileActionIcons} className="mobile-action-icons">
-                <SearchOutlined style={{...headerStyles.actionIcon, fontSize: '1.3rem'}} />
-                <ShoppingOutlined style={{...headerStyles.actionIcon, fontSize: '1.3rem'}} />
               </div>
 
-              <div style={headerStyles.mobileMenuFooter}>
-                <div style={headerStyles.mobileSocialLinks} className="mobile-social-links">
-                  <a 
-                    href="https://www.instagram.com/vediqueproducts" 
-                    style={{ color: "#5a8f5a", fontSize: "20px", transition: "color 0.2s ease" }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#1e3e1e'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#5a8f5a'}
-                  >
-                    <FaInstagram />
-                  </a>
-                  <a 
-                    href="https://www.youtube.com/@Vedique-products" 
-                    style={{ color: "#5a8f5a", fontSize: "20px", transition: "color 0.2s ease" }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#1e3e1e'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#5a8f5a'}
-                  >
-                    <FaYoutube />
-                  </a>
-                  <a 
-                    href="https://www.facebook.com/profile.php?id=61586468189630" 
-                    style={{ color: "#5a8f5a", fontSize: "20px", transition: "color 0.2s ease" }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#1e3e1e'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#5a8f5a'}
-                  >
-                    <FaFacebookF />
-                  </a>
+              {/* Footer — Social + Copyright */}
+              <div style={{
+                padding: '14px 20px 20px',
+                borderTop: '1px solid rgba(44,95,45,0.08)',
+                textAlign: 'center',
+              }}>
+                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '12px' }}>
+                  {[
+                    { href: 'https://www.instagram.com/vediqueproducts', Icon: FaInstagram },
+                    { href: 'https://www.youtube.com/@Vedique-products', Icon: FaYoutube },
+                    { href: 'https://www.facebook.com/profile.php?id=61586468189630', Icon: FaFacebookF },
+                  ].map(({ href, Icon }) => (
+                    <motion.a
+                      key={href}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#5a8f5a', fontSize: '18px', display: 'flex' }}
+                      whileHover={{ scale: 1.25, color: '#2c5f2d' }}
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ type: 'spring', stiffness: 350 }}
+                    >
+                      <Icon />
+                    </motion.a>
+                  ))}
                 </div>
-                <p style={headerStyles.mobileCopyright}>
-                  © {new Date().getFullYear()} Vedique<br />Healthy Mixers & Natural Foods
+                <p style={{ color: '#9abf9a', fontSize: '0.68rem', lineHeight: 1.6, margin: 0 }}>
+                  © {new Date().getFullYear()} Vedique · Healthy Mixers & Natural Foods
                 </p>
               </div>
             </motion.div>

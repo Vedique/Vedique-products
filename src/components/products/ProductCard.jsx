@@ -25,10 +25,10 @@ const ProductCard = ({ product, index, compact = false }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: isEven ? -50 : 50 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true }}
+      initial={{ opacity: 0, y: isMobile ? 20 : (isEven ? -30 : 30) }}
+      whileInView={{ opacity: 1, y: 0, x: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      viewport={{ once: true, margin: '-50px' }}
       style={{ height: '100%', cursor: 'pointer' }}
       onClick={openProduct}
     >
@@ -88,21 +88,21 @@ const ProductCard = ({ product, index, compact = false }) => {
             </p>
 
             {/* Price + Stock + Net Weight in one line */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.5rem', 
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
               flexWrap: 'wrap',
               width: '100%'
             }}>
               {/* Price with label */}
-              <div style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
                 gap: '0.2rem'
               }}>
-                <span style={{ 
-                  fontSize: '0.7rem', 
+                <span style={{
+                  fontSize: '0.7rem',
                   color: '#6b5e53',
                   fontWeight: 400,
                   textTransform: 'uppercase',
@@ -110,8 +110,8 @@ const ProductCard = ({ product, index, compact = false }) => {
                 }}>
                   Price:
                 </span>
-                <span style={{ 
-                  fontSize: compact ? '1.05rem' : '1.2rem', 
+                <span style={{
+                  fontSize: compact ? '1.05rem' : '1.2rem',
                   fontWeight: 500,
                   color: '#1e3a24'
                 }}>
@@ -119,17 +119,17 @@ const ProductCard = ({ product, index, compact = false }) => {
                 </span>
               </div>
 
-              <span style={{ 
-                color: '#9b8c7e', 
+              <span style={{
+                color: '#9b8c7e',
                 fontSize: '0.7rem'
               }}>
                 •
               </span>
 
               {/* Stock Status - No background, just green text */}
-              <span style={{ 
-                color: '#2e7d32', 
-                fontSize: '0.75rem', 
+              <span style={{
+                color: '#2e7d32',
+                fontSize: '0.75rem',
                 fontWeight: 500,
                 textTransform: 'uppercase',
                 letterSpacing: '0.02em',
@@ -138,21 +138,21 @@ const ProductCard = ({ product, index, compact = false }) => {
                 {product.stockStatus}
               </span>
 
-              <span style={{ 
-                color: '#9b8c7e', 
+              <span style={{
+                color: '#9b8c7e',
                 fontSize: '0.7rem'
               }}>
                 •
               </span>
-              
+
               {/* Net Weight */}
-              <div style={{ 
-                display: 'inline-flex', 
+              <div style={{
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.2rem'
               }}>
-                <span style={{ 
-                  fontSize: '0.7rem', 
+                <span style={{
+                  fontSize: '0.7rem',
                   color: '#6b5e53',
                   fontWeight: 400,
                   textTransform: 'uppercase',
@@ -160,8 +160,8 @@ const ProductCard = ({ product, index, compact = false }) => {
                 }}>
                   Net Wt:
                 </span>
-                <span style={{ 
-                  fontSize: '0.8rem', 
+                <span style={{
+                  fontSize: '0.8rem',
                   fontWeight: 500,
                   color: '#1e3a24',
                   whiteSpace: 'nowrap'
