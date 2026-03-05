@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
 
 const steps = [
   {
@@ -11,10 +11,10 @@ const steps = [
       </svg>
     ),
     title: 'Choose',
-    description: 'Pick your favorite products from our freshmade collection.',
-    detail: 'Curated selection',
+    description: 'Pick your favorites from our artisan collection.',
+    detail: 'Step 01',
     color: '#B76E79',
-    gradient: 'linear-gradient(135deg, #B76E79 0%, #D4A5A9 100%)'
+    gradient: 'linear-gradient(135deg, #B76E79 0%, #D4A5A9 100%)',
   },
   {
     icon: (
@@ -24,10 +24,10 @@ const steps = [
       </svg>
     ),
     title: 'Prepare',
-    description: 'Each batch is made with care and attention by our artisans.',
-    detail: 'Small-batch magic',
+    description: 'Freshly made with ancient wisdom & soul.',
+    detail: 'Step 02',
     color: '#E6B17E',
-    gradient: 'linear-gradient(135deg, #E6B17E 0%, #F5CDA7 100%)'
+    gradient: 'linear-gradient(135deg, #E6B17E 0%, #F5CDA7 100%)',
   },
   {
     icon: (
@@ -38,10 +38,10 @@ const steps = [
       </svg>
     ),
     title: 'Pack',
-    description: 'Carefully packed to maintain freshness and peak hygiene.',
-    detail: 'Eco-conscious wrap',
+    description: 'Eco-conscious wrap for peak hygiene.',
+    detail: 'Step 03',
     color: '#8A9E96',
-    gradient: 'linear-gradient(135deg, #8A9E96 0%, #AEC2B9 100%)'
+    gradient: 'linear-gradient(135deg, #8A9E96 0%, #AEC2B9 100%)',
   },
   {
     icon: (
@@ -52,206 +52,250 @@ const steps = [
       </svg>
     ),
     title: 'Deliver',
-    description: 'Sent to you fresh and ready to spark some joy in your day.',
-    detail: 'Speedy arrival',
+    description: 'Straight to you, fresh and full of life.',
+    detail: 'Step 04',
     color: '#C5A48A',
-    gradient: 'linear-gradient(135deg, #C5A48A 0%, #E0C8B8 100%)'
+    gradient: 'linear-gradient(135deg, #C5A48A 0%, #E0C8B8 100%)',
   }
 ];
 
-const Connector = ({ isLast, index }) => {
+const BloomingCard = ({ step, index, isMobile, containerScrollY, spread, padding }) => {
   const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"]
-  });
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
-  const pathLength = useSpring(useTransform(scrollYProgress, [0.4, 0.6], [0, 1]), {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
+  const [isFlipped, setIsFlipped] = useState(false);
 
-  if (isLast) return null;
+  // Maintain magnetic hover for desktop
+  const springRotateX = useSpring(useTransform(mouseY, [-200, 200], [10, -10]), { stiffness: 100, damping: 30 });
+  const springRotateY = useSpring(useTransform(mouseX, [-200, 200], [-10, 10]), { stiffness: 100, damping: 30 });
 
-  return (
-    <div ref={ref} style={{
-      position: 'absolute',
-      left: '50%',
-      top: '100%',
-      height: '120px',
-      width: '2px',
-      transform: 'translateX(-50%)',
-      zIndex: 1
-    }}>
-      <svg width="20" height="120" viewBox="0 0 20 120" fill="none" style={{ overflow: 'visible' }}>
-        <motion.path
-          d="M10 0V120"
-          stroke="url(#lineGradient)"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeDasharray="6 6"
-          style={{ pathLength }}
-        />
-        <defs>
-          <linearGradient id="lineGradient" x1="10" y1="0" x2="10" y2="120" gradientUnits="userSpaceOnUse">
-            <stop stopColor={steps[index].color} />
-            <stop offset="1" stopColor={steps[index + 1].color} />
-          </linearGradient>
-        </defs>
-      </svg>
-    </div>
-  );
-};
+  function handleMouse(e) {
+    if (!ref.current || isMobile) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    mouseX.set(x);
+    mouseY.set(y);
+  }
 
-const StepCard = ({ step, index, isLast }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.5 });
+  function handleLeave() {
+    mouseX.set(0);
+    mouseY.set(0);
+  }
+
+  const bloomStart = 0.05 + (index * 0.25);
+  const bloomEnd = bloomStart + 0.1;
+
+  const opacity = useTransform(containerScrollY, [bloomStart, bloomEnd], [0, 1]);
+  const scale = useTransform(containerScrollY, [bloomStart, bloomEnd], [0.5, 1]);
+  const yOffset = useTransform(containerScrollY, [bloomStart, bloomEnd], [50, 0]);
+
+  const isLeft = index % 2 === 0;
+  const topPercentages = [12.5, 37.5, 62.5, 87.5];
 
   return (
     <div
-      ref={ref}
       style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '80px 0',
-        width: '100%',
+        position: 'absolute',
+        top: `${topPercentages[index]}%`,
+        transform: 'translateY(-50%)',
+        width: isMobile ? `calc(50vw - ${(spread + padding) - 10}px)` : '300px',
+        left: isLeft ? 'auto' : `calc(50% + ${spread + padding}px)`,
+        right: isLeft ? `calc(50% + ${spread + padding}px)` : 'auto',
+        zIndex: 5,
+        perspective: '1000px' // For 3D Flip
       }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.8, y: 50 }}
-        whileInView={{ opacity: 1, scale: 1, y: 0 }}
-        viewport={{ once: false, amount: 0.5 }}
-        transition={{
-          type: "spring",
-          stiffness: 100,
-          damping: 20
+        ref={ref}
+        onMouseMove={handleMouse}
+        onMouseLeave={handleLeave}
+        onClick={() => setIsFlipped(!isFlipped)}
+        animate={{
+          rotateY: isFlipped ? 180 : 0
         }}
-        whileHover={{ y: -10 }}
+        transition={{ type: "spring", stiffness: 80, damping: 15 }}
         style={{
-          width: 'clamp(300px, 85vw, 500px)',
-          padding: '48px',
-          background: 'rgba(255, 255, 255, 0.4)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderRadius: '40px',
-          border: '1px solid rgba(255, 255, 255, 0.5)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.05)',
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          textAlign: 'center',
-          cursor: 'default',
-          position: 'relative',
-          overflow: 'hidden'
+          opacity,
+          scale,
+          y: yOffset,
+          width: '100%',
+          height: isMobile ? '135px' : '220px',
+          rotateX: isMobile ? 0 : springRotateX,
+          // If desktop, apply magnetic Y unless flipped
+          rotateZ: 0, // Prevent weird axis flipping when combining Y arrays
+          transformStyle: 'preserve-3d',
+          cursor: 'pointer',
+          position: 'relative'
         }}
+        whileHover={{ scale: 1.05 }}
       >
-        {/* Step Number Background */}
+        {/* FRONT FACE */}
         <div style={{
           position: 'absolute',
-          top: '10px',
-          right: '20px',
-          fontSize: '8rem',
-          fontWeight: 900,
-          color: `${step.color}08`,
-          fontFamily: 'Inter, sans-serif',
-          lineHeight: 1,
-          pointerEvents: 'none',
-          userSelect: 'none',
-          zIndex: -1
+          inset: 0,
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          padding: isMobile ? '16px 12px' : '30px',
+          background: 'rgba(255, 255, 255, 0.65)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderRadius: isMobile ? '16px' : '24px',
+          border: '1px solid rgba(255, 255, 255, 0.9)',
+          boxShadow: `0 15px 35px -10px ${step.color}30`,
+          textAlign: isMobile ? 'center' : (isLeft ? 'right' : 'left'),
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: isMobile ? 'center' : (isLeft ? 'flex-end' : 'flex-start'),
+          justifyContent: 'center'
         }}>
-          {`0${index + 1}`}
-        </div>
-
-        <motion.div
-          animate={isInView ? {
-            y: [0, -12, 0],
-            rotate: [0, 8, 0, -8, 0]
-          } : {}}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          style={{
-            width: '90px',
-            height: '90px',
+          <div style={{
+            width: isMobile ? '36px' : '44px',
+            height: isMobile ? '36px' : '44px',
             background: step.gradient,
-            borderRadius: '28px',
+            borderRadius: isMobile ? '10px' : '12px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '32px',
-            color: '#FFFFFF',
-            boxShadow: `0 20px 40px -10px ${step.color}60`,
-          }}
-        >
-          {step.icon}
-        </motion.div>
+            marginBottom: isMobile ? '8px' : '15px',
+            color: '#FFF',
+            boxShadow: `0 8px 20px -5px ${step.color}80`
+          }}>
+            {React.cloneElement(step.icon, { width: isMobile ? 18 : 22, height: isMobile ? 18 : 22 })}
+          </div>
 
-        <span style={{
-          fontSize: '0.7rem',
-          letterSpacing: '0.4em',
-          color: step.color,
-          textTransform: 'uppercase',
-          fontWeight: 700,
-          marginBottom: '12px',
-          opacity: 0.8
+          <span style={{
+            fontSize: isMobile ? '0.55rem' : '0.65rem',
+            letterSpacing: '0.2em',
+            color: step.color,
+            fontWeight: 800,
+            display: 'block',
+            marginBottom: '4px'
+          }}>
+            {step.detail}
+          </span>
+
+          <h3 style={{
+            fontSize: isMobile ? '1.3rem' : '2rem',
+            fontFamily: 'Cormorant Garamond, serif',
+            fontWeight: 300,
+            margin: 0,
+            color: '#1A1A1A',
+            lineHeight: 1.1
+          }}>
+            {step.title}
+          </h3>
+
+          {!isMobile && (
+            <p style={{
+              fontSize: '0.9rem',
+              color: '#555',
+              lineHeight: 1.5,
+              margin: '10px 0 0 0',
+              fontWeight: 300
+            }}>
+              {step.description}
+            </p>
+          )}
+
+          {/* Flying "Tap Me" Message */}
+          {!isFlipped && (
+            <motion.div
+              animate={{ y: [0, -4, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              style={{
+                position: 'absolute',
+                bottom: isMobile ? '-14px' : '-16px',
+                right: isLeft || isMobile ? 'auto' : '20px',
+                left: isMobile ? '50%' : (isLeft ? '20px' : 'auto'),
+                transform: isMobile ? 'translateX(-50%)' : 'none',
+                background: step.color,
+                color: 'white',
+                padding: isMobile ? '2px 8px' : '4px 12px',
+                borderRadius: '20px',
+                fontSize: isMobile ? '0.5rem' : '0.65rem',
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+                boxShadow: `0 4px 10px ${step.color}60`,
+                letterSpacing: '0.5px'
+              }}
+            >
+              Tap to read ✨
+            </motion.div>
+          )}
+        </div>
+
+        {/* BACK FACE */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: 'rotateY(180deg)', // Flips it natively
+          padding: isMobile ? '16px' : '30px',
+          background: step.gradient,
+          borderRadius: isMobile ? '16px' : '24px',
+          border: '1px solid rgba(255, 255, 255, 0.4)',
+          boxShadow: `0 15px 35px -10px ${step.color}60`,
+          color: 'white',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center'
         }}>
-          {step.detail}
-        </span>
-
-        <h3 style={{
-          fontSize: '2.8rem',
-          fontWeight: 300,
-          color: '#1A1A1A',
-          margin: '0 0 20px',
-          fontFamily: 'Cormorant Garamond, serif',
-          lineHeight: 1
-        }}>
-          {step.title}
-        </h3>
-
-        <p style={{
-          fontSize: '1.05rem',
-          color: '#555',
-          lineHeight: 1.7,
-          fontWeight: 300,
-          maxWidth: '340px',
-          margin: 0
-        }}>
-          {step.description}
-        </p>
-
-        <motion.div
-          initial={{ width: 0 }}
-          whileInView={{ width: '60px' }}
-          style={{
-            height: '2px',
-            background: `linear-gradient(90deg, transparent, ${step.color}, transparent)`,
-            marginTop: '24px',
-            borderRadius: '2px'
-          }}
-        />
+          <h4 style={{ margin: '0 0 10px 0', fontSize: isMobile ? '1.1rem' : '1.5rem', fontFamily: 'Cormorant Garamond, serif' }}>
+            {step.title}
+          </h4>
+          <p style={{
+            fontSize: isMobile ? '0.75rem' : '1rem',
+            lineHeight: 1.6,
+            margin: 0,
+            opacity: 0.9,
+            fontWeight: 300
+          }}>
+            {step.description}
+          </p>
+        </div>
       </motion.div>
-
-      <Connector isLast={isLast} index={index} />
     </div>
   );
 };
 
 export default function HowItWorks() {
   const sectionRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start start", "end end"]
+    offset: ["start center", "end end"]
   });
 
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const rotateBG = useTransform(scrollYProgress, [0, 1], [0, 45]);
+  const vineProgress = useSpring(scrollYProgress, { stiffness: 80, damping: 25 });
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Use a precise matching height mapped to the space taken by the 4 cards.
+  const vineHeight = isMobile ? 800 : 1200;
+
+  // The mathematical spread exactly touches the boundary of the cards.
+  // We INCREASED spread on Mobile (from 20 to 38) to make it dramatically more curved!
+  const spread = isMobile ? 38 : 80;
+  const padding = isMobile ? 4 : 20;
+
+  const pathData = `
+    M 0 0 
+    C 0 ${vineHeight * 0.05}, -${spread} ${vineHeight * 0.05}, -${spread} ${vineHeight * 0.125}
+    C -${spread} ${vineHeight * 0.25}, ${spread} ${vineHeight * 0.25}, ${spread} ${vineHeight * 0.375}
+    C ${spread}  ${vineHeight * 0.50}, -${spread} ${vineHeight * 0.50}, -${spread} ${vineHeight * 0.625}
+    C -${spread} ${vineHeight * 0.75}, ${spread} ${vineHeight * 0.75}, ${spread} ${vineHeight * 0.875}
+  `;
 
   return (
     <section
@@ -260,172 +304,116 @@ export default function HowItWorks() {
         background: '#FAF8F6',
         position: 'relative',
         overflow: 'hidden',
-        padding: '120px 24px'
+        padding: isMobile ? '80px 0 80px 0' : '100px 0 120px 0',
       }}
     >
-      {/* Gen Z Aesthetic Background Shapes */}
       <motion.div
         style={{
           position: 'absolute',
-          top: '5%',
-          left: '-10%',
-          width: '60vw',
-          height: '60vw',
-          background: 'radial-gradient(circle, rgba(183, 110, 121, 0.08) 0%, transparent 70%)',
-          y: backgroundY,
-          rotate: rotateBG,
-          pointerEvents: 'none',
-          zIndex: 0
-        }}
-      />
-      <motion.div
-        style={{
-          position: 'absolute',
-          bottom: '5%',
-          right: '-10%',
-          width: '70vw',
-          height: '70vw',
-          background: 'radial-gradient(circle, rgba(198, 169, 105, 0.08) 0%, transparent 70%)',
-          y: useTransform(scrollYProgress, [0, 1], ["0%", "-30%"]),
-          rotate: useTransform(scrollYProgress, [0, 1], [0, -45]),
-          pointerEvents: 'none',
-          zIndex: 0
+          top: '0%', left: '-10%', width: '100vw', height: '100vw',
+          background: 'radial-gradient(circle, rgba(138, 158, 150, 0.05) 0%, transparent 60%)',
+          y: useTransform(scrollYProgress, [0, 1], ["0%", "30%"]),
+          pointerEvents: 'none', zIndex: 0
         }}
       />
 
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        position: 'relative',
-        zIndex: 2
-      }}>
-        {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            textAlign: 'center',
-            marginBottom: '120px'
-          }}
-        >
-          <span style={{
-            fontSize: '0.85rem',
-            letterSpacing: '0.5em',
-            color: '#B29A8A',
-            textTransform: 'uppercase',
-            display: 'block',
-            marginBottom: '20px',
-            fontWeight: 600
-          }}>
-            OUR VIBE & PROCESS
-          </span>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', position: 'relative', zIndex: 5, padding: '0 10px' }}>
 
-          <h2 style={{
-            fontSize: 'clamp(3rem, 10vw, 6rem)',
-            fontWeight: 200,
-            color: '#1A1A1A',
-            margin: '0',
-            fontFamily: 'Cormorant Garamond, serif',
-            lineHeight: 1,
-            letterSpacing: '-0.02em'
-          }}>
-            Crafted <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#B76E79' }}>with Soul</span>
-          </h2>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            style={{
-              fontSize: '1.2rem',
-              color: '#666',
-              marginTop: '24px',
-              fontWeight: 300,
-              maxWidth: '600px',
-              margin: '24px auto 0'
-            }}
-          >
-            The intersection of ancient wisdom and modern aesthetic.
-            No filters, just pure process.
-          </motion.p>
-        </motion.div>
-
-        {/* Storytelling List */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '40px'
-        }}>
-          {steps.map((step, index) => (
-            <StepCard
-              key={step.title}
-              step={step}
-              index={index}
-              isLast={index === steps.length - 1}
-            />
-          ))}
-        </div>
-
-        {/* Floating Interactive Badge */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          style={{
-            marginTop: '150px',
-            display: 'flex',
-            justifyContent: 'center'
-          }}
+          viewport={{ once: true }}
+          style={{ textAlign: 'center', marginBottom: isMobile ? '60px' : '100px' }}
         >
-          <motion.div
-            whileHover={{
-              scale: 1.02,
-              boxShadow: '0 30px 60px -15px rgba(0,0,0,0.1)'
-            }}
-            style={{
-              padding: '32px 64px',
-              background: 'rgba(255, 255, 255, 0.6)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderRadius: '100px',
-              border: '1px solid rgba(255, 255, 255, 0.8)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '32px',
-              cursor: 'pointer'
-            }}
-          >
-            <div style={{ display: 'flex', gap: '12px' }}>
-              {steps.map(s => (
-                <motion.div
-                  key={s.color}
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 1, 0.5]
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    delay: steps.indexOf(s) * 0.5
-                  }}
-                  style={{ width: '10px', height: '10px', borderRadius: '50%', background: s.color }}
-                />
-              ))}
-            </div>
-            <span style={{
-              fontSize: '1rem',
-              fontWeight: 500,
-              color: '#1A1A1A',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase'
-            }}>
-              Pure. Honest. Vedique.
-            </span>
-          </motion.div>
+          <span style={{ fontSize: '0.75rem', letterSpacing: '0.4em', color: '#8A9E96', textTransform: 'uppercase', display: 'block', marginBottom: '10px', fontWeight: 600 }}>
+            the root of it all
+          </span>
+          <h2 style={{ fontSize: isMobile ? '2.5rem' : '4rem', fontFamily: 'Cormorant Garamond, serif', fontWeight: 200, color: '#1A1A1A', lineHeight: 1 }}>
+            Grows with <span style={{ fontStyle: 'italic', fontWeight: 300, color: '#8A9E96' }}>Nature</span>
+          </h2>
         </motion.div>
+
+        {/* The Exact Container mapping height to vineHeight */}
+        <div style={{ position: 'relative', width: '100%', height: `${vineHeight}px` }}>
+
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            height: `${vineHeight}px`,
+            width: '4px',
+            zIndex: 1,
+            pointerEvents: 'none',
+            transform: 'translateX(-50%)'
+          }}>
+            <svg
+              width={spread * 3}
+              height={vineHeight}
+              viewBox={`${-spread * 1.5} 0 ${spread * 3} ${vineHeight}`}
+              style={{ overflow: 'visible', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}
+            >
+              <path
+                d={pathData}
+                stroke="rgba(138, 158, 150, 0.15)"
+                strokeWidth={isMobile ? "2" : "4"}
+                strokeLinecap="round"
+                strokeDasharray="4 8"
+                fill="none"
+              />
+              <motion.path
+                d={pathData}
+                stroke="url(#vineGradient)"
+                strokeWidth={isMobile ? "4" : "6"}
+                strokeLinecap="round"
+                fill="none"
+                style={{ pathLength: vineProgress }}
+              />
+              <motion.path
+                d={pathData}
+                stroke="rgba(138, 158, 150, 0.4)"
+                strokeWidth={isMobile ? "8" : "12"}
+                strokeLinecap="round"
+                fill="none"
+                style={{ pathLength: vineProgress, filter: 'blur(6px)' }}
+              />
+              <motion.circle
+                r={isMobile ? "4" : "6"}
+                fill="#8A9E96"
+                stroke="#FFFFFF"
+                strokeWidth="2"
+                style={{
+                  filter: 'drop-shadow(0 0 8px rgba(138, 158, 150, 0.8))',
+                  offsetPath: `path("${pathData}")`,
+                }}
+                animate={{
+                  offsetDistance: useTransform(vineProgress, [0, 1], ["0%", "100%"]),
+                }}
+              />
+              <defs>
+                <linearGradient id="vineGradient" x1="0" y1="0" x2="0" y2={vineHeight} gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#8A9E96" />
+                  <stop offset="33%" stopColor="#B76E79" />
+                  <stop offset="66%" stopColor="#E6B17E" />
+                  <stop offset="100%" stopColor="#C5A48A" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          <div style={{ width: '100%', height: '100%', position: 'absolute', zIndex: 10, top: 0, left: 0 }}>
+            {steps.map((step, index) => (
+              <BloomingCard
+                key={step.title}
+                step={step}
+                index={index}
+                isMobile={isMobile}
+                containerScrollY={vineProgress}
+                spread={spread}
+                padding={padding}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
