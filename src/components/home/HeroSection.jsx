@@ -7,9 +7,9 @@ const HeroSection = () => {
   const canvasRef = useRef(null);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const scrollToWatch = () => {
-  const watchSection = document.getElementById('watch-section');
-  watchSection?.scrollIntoView({ behavior: 'smooth' });
-};
+    const watchSection = document.getElementById('watch-section');
+    watchSection?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -25,7 +25,7 @@ const HeroSection = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext('2d');
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -102,7 +102,7 @@ const HeroSection = () => {
       height = window.innerHeight;
       canvas.width = width;
       canvas.height = height;
-      
+
       // Reinitialize particles for new size
       particles = [];
       const newParticleCount = width < 768 ? 25 : 50;
@@ -407,7 +407,7 @@ const HeroSection = () => {
         <div style={styles.lightLeak} />
 
         <div style={styles.contentWrapper}>
-          <motion.div 
+          <motion.div
             style={styles.leftContent}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -420,13 +420,13 @@ const HeroSection = () => {
             </h1>
 
             <p style={styles.description}>
-              {isMobile 
+              {isMobile
                 ? "Experience real homemade flavors, crafted in small batches and made fresh without the extra hype"
                 : "Experience real homemade flavors, crafted in small batches and made fresh without the extra hype"}
             </p>
 
             <div style={styles.ctaContainer}>
-              <Button 
+              <Button
                 size="large"
                 onClick={scrollToProducts}
                 style={styles.primaryButton}
@@ -443,11 +443,11 @@ const HeroSection = () => {
               >
                 {isMobile ? 'Shop Now' : 'Explore Collection'}
               </Button>
-              
-              <Button 
+
+              <Button
                 size="large"
-  onClick={scrollToWatch} // Add this line
-  style={styles.secondaryButton}
+                onClick={scrollToWatch} // Add this line
+                style={styles.secondaryButton}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255, 215, 150, 0.1)';
                   e.currentTarget.style.borderColor = '#ffd796';
@@ -496,25 +496,25 @@ const HeroSection = () => {
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             style={styles.rightContent}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <div style={{...styles.showcaseCard, ...styles.card1}}>
+            <div style={{ ...styles.showcaseCard, ...styles.card1 }}>
               <div style={styles.cardImage}></div>
               {/* <div style={styles.cardTitle}>Fresh Avocados</div> */}
               <div style={styles.cardSubtitle}>Natural sweet and taste</div>
             </div>
-            
-            <div style={{...styles.showcaseCard, ...styles.card2}}>
+
+            <div style={{ ...styles.showcaseCard, ...styles.card2 }}>
               <div style={styles.cardImage}></div>
               {/* <div style={styles.cardTitle}>Organic Berries</div> */}
               <div style={styles.cardSubtitle}>Fresh and full of flavor</div>
             </div>
-            
-            <div style={{...styles.showcaseCard, ...styles.card3}}>
+
+            <div style={{ ...styles.showcaseCard, ...styles.card3 }}>
               <div style={styles.cardImage}></div>
               {/* <div style={styles.cardTitle}>Kale & Greens</div> */}
               <div style={styles.cardSubtitle}>Rich and wholesome</div>
@@ -522,7 +522,7 @@ const HeroSection = () => {
           </motion.div>
         </div>
 
-        <motion.div 
+        <motion.div
           style={styles.scrollIndicator}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

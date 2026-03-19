@@ -1,6 +1,6 @@
 // Header.jsx
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   motion,
   AnimatePresence,
@@ -16,17 +16,19 @@ import {
   ShoppingOutlined,
   SearchOutlined,
   UserOutlined,
+  HomeOutlined,
+  PhoneOutlined,
 } from '@ant-design/icons';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const { scrollY } = useScroll();
 
   const springConfig = { stiffness: 200, damping: 30, mass: 0.5 };
 
-  // ── Scroll-driven transforms ──────────────────────────────────────────────
   const widthVal = useTransform(scrollY, [0, 100], [100, 94]);
   const topValNum = useTransform(scrollY, [0, 100], [0, 16]);
   const radiusNum = useTransform(scrollY, [0, 100], [0, 40]);
@@ -36,7 +38,6 @@ const Header = () => {
   const blurNum = useTransform(scrollY, [0, 80], [0, 16]);
   const scaleNum = useTransform(scrollY, [0, 100], [1, 0.98]);
 
-  // Apply individual springs for ultra-smooth property-level animation
   const widthSpring = useSpring(widthVal, springConfig);
   const topSpring = useSpring(topValNum, springConfig);
   const radiusSpring = useSpring(radiusNum, springConfig);
@@ -55,13 +56,11 @@ const Header = () => {
   const blur = blurSpring;
   const scale = scaleSpring;
 
-  // Template strings for CSS values
   const background = useMotionTemplate`rgba(246,241,232,${bgAlpha})`;
   const boxShadow = useMotionTemplate`0 8px 45px rgba(20,45,20,${shadowAlpha}), 0 2px 12px rgba(0,0,0,0.06)`;
   const backdropFilter = useMotionTemplate`blur(${blur}px)`;
   const padding = useMotionTemplate`${paddingY} clamp(20px, 4vw, 40px)`;
 
-  // Determine mobile status for layout tweaks
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   useEffect(() => {
     const checkSize = () => setIsSmallScreen(window.innerWidth < 1025);
@@ -77,7 +76,6 @@ const Header = () => {
     { key: 'contact', label: 'Contact', path: '/contact' },
   ];
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? 'hidden' : 'unset';
     return () => { document.body.style.overflow = 'unset'; };
@@ -88,33 +86,24 @@ const Header = () => {
 
   const closeMenu = () => setMobileMenuOpen(false);
 
-  // ── Animation variants ────────────────────────────────────────────────────
-
-  // Backdrop
   const backdropVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.25 } },
     exit: { opacity: 0, transition: { duration: 0.2 } },
   };
 
-  // Top-anchored floating card (drops from header)
   const mobileMenuVariants = {
     hidden: { opacity: 0, scale: 0.95, y: -20 },
     visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
+      opacity: 1, scale: 1, y: 0,
       transition: { type: 'spring', stiffness: 350, damping: 30 },
     },
     exit: {
-      opacity: 0,
-      scale: 0.95,
-      y: -15,
+      opacity: 0, scale: 0.95, y: -15,
       transition: { duration: 0.2 },
     },
   };
 
-  // Staggered nav items
   const navContainerVariants = {
     hidden: {},
     visible: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
@@ -127,27 +116,22 @@ const Header = () => {
     exit: { opacity: 0, y: 8, transition: { duration: 0.15 } },
   };
 
-  // ── Responsive CSS ────────────────────────────────────────────────────────
   const mediaStyles = `
-    /* Desktop (>1024px): show desktop layout */
     @media (min-width: 1025px) {
       .hdr-mobile { display: none !important; }
     }
-    /* Mobile/Tablet (<1025px): hide desktop layout */
     @media (max-width: 1024px) {
       .hdr-desktop-nav,
       .hdr-desktop-actions,
       .hdr-desktop-logo { display: none !important; }
-      .hdr-mobile { display: flex !important; }
+      .hdr-mobile { display: grid !important; }
     }
 
-    /* Nav link hover underline */
     .hdr-nav-link::after {
       content: '';
       position: absolute;
       bottom: -2px; left: 0;
       width: 100%; height: 2px;
-      // background: linear-gradient(90deg, #2c5f2d, #4caf4c);
       transform: scaleX(0);
       transform-origin: right;
       transition: transform 0.3s ease;
@@ -159,18 +143,28 @@ const Header = () => {
       transform-origin: left;
     }
 
-    /* Mobile nav link hover */
     .mob-nav-item:hover .mob-nav-label { color: #2c5f2d; }
     .mob-nav-item:hover .mob-nav-arrow { transform: translateX(5px); color: #2c5f2d; }
     .mob-nav-arrow { transition: transform 0.2s ease, color 0.2s ease; }
 
-    /* Floating card glow pulse when open */
     @keyframes cardGlow {
       0%, 100% { box-shadow: 0 20px 60px rgba(44,95,45,0.18), 0 0 0 1px rgba(255,255,255,0.4); }
       50%       { box-shadow: 0 24px 70px rgba(44,95,45,0.24), 0 0 0 1px rgba(255,255,255,0.5); }
     }
     .mob-menu-card { animation: cardGlow 3s ease-in-out infinite; }
+
+    /* Mobile icon button active state */
+    .mob-icon-btn { transition: all 0.18s ease; }
+    .mob-icon-btn.active-route { color: #1e4d20 !important; }
+    .mob-icon-btn.active-route svg, .mob-icon-btn.active-route span { color: #1e4d20 !important; }
   `;
+
+  // Mobile quick-nav icons
+  const mobileQuickNav = [
+    { Icon: HomeOutlined, label: 'Home', path: '/' },
+    { Icon: ShoppingOutlined, label: 'Shop', path: '/products', badge: 3 },
+    { Icon: PhoneOutlined, label: 'Contact', path: '/contact' },
+  ];
 
   return (
     <>
@@ -195,7 +189,6 @@ const Header = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderBottom: 'none',
           border: '1px solid rgba(44,95,45,0.08)',
           overflow: 'hidden',
         }}
@@ -203,16 +196,12 @@ const Header = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div
-          style={{
-            width: '100%',
-            maxWidth: '1400px',
-            margin: '0 auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
+        <div style={{
+          width: '100%', maxWidth: '1400px', margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+
+          {/* Desktop Logo */}
           <Link
             to="/"
             className="hdr-desktop-logo"
@@ -220,11 +209,8 @@ const Header = () => {
           >
             <motion.span
               style={{
-                fontSize: 'clamp(1.4rem, 3.5vw, 2rem)',
-                fontWeight: 700,
-                color: '#2c5f2d',
-                letterSpacing: '0.5px',
-                lineHeight: 1.2,
+                fontSize: 'clamp(1.4rem, 3.5vw, 2rem)', fontWeight: 700,
+                color: '#2c5f2d', letterSpacing: '0.5px', lineHeight: 1.2,
               }}
               whileHover={{ scale: 1.03 }}
               transition={{ type: 'spring', stiffness: 300 }}
@@ -232,11 +218,8 @@ const Header = () => {
               Vedique
             </motion.span>
             <span style={{
-              fontSize: 'clamp(0.5rem, 1.2vw, 0.68rem)',
-              color: '#5a8f5a',
-              letterSpacing: 'clamp(1px, 1.5vw, 3px)',
-              textTransform: 'uppercase',
-              whiteSpace: 'nowrap',
+              fontSize: 'clamp(0.5rem, 1.2vw, 0.68rem)', color: '#5a8f5a',
+              letterSpacing: 'clamp(1px, 1.5vw, 3px)', textTransform: 'uppercase', whiteSpace: 'nowrap',
             }}>
               Nourish • Thrive • Glow
             </span>
@@ -254,10 +237,8 @@ const Header = () => {
                   textDecoration: 'none',
                   fontSize: 'clamp(0.82rem, 1.4vw, 0.95rem)',
                   fontWeight: isActive(item.path) ? 600 : 500,
-                  letterSpacing: '0.3px',
-                  padding: '6px 0',
-                  position: 'relative',
-                  whiteSpace: 'nowrap',
+                  letterSpacing: '0.3px', padding: '6px 0',
+                  position: 'relative', whiteSpace: 'nowrap',
                   transition: 'color 0.2s ease',
                 }}
               >
@@ -267,19 +248,13 @@ const Header = () => {
           </nav>
 
           {/* Desktop Actions */}
-          <div
-            className="hdr-desktop-actions"
-            style={{ display: 'flex', alignItems: 'center', gap: 'clamp(14px, 2vw, 24px)', flexShrink: 0 }}
-          >
+          <div className="hdr-desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(14px, 2vw, 24px)', flexShrink: 0 }}>
             {[SearchOutlined, UserOutlined].map((Icon, i) => (
               <motion.span key={i} whileHover={{ scale: 1.2, color: '#1e4d20' }} style={{ cursor: 'pointer' }}>
                 <Icon style={{ color: '#2c5f2d', fontSize: 'clamp(1.05rem, 1.8vw, 1.2rem)' }} />
               </motion.span>
             ))}
-            <motion.div
-              style={{ position: 'relative', display: 'inline-block', cursor: 'pointer' }}
-              whileHover={{ scale: 1.2 }}
-            >
+            <motion.div style={{ position: 'relative', display: 'inline-block', cursor: 'pointer' }} whileHover={{ scale: 1.2 }}>
               <ShoppingOutlined style={{ color: '#2c5f2d', fontSize: 'clamp(1.05rem, 1.8vw, 1.2rem)' }} />
               <span style={{
                 position: 'absolute', top: '-8px', right: '-8px',
@@ -291,44 +266,117 @@ const Header = () => {
             </motion.div>
           </div>
 
-          {/* Mobile Header Row */}
+          {/* ── MOBILE HEADER ROW ── */}
+          {/* 3-column grid: logo | icons | hamburger — each equal flex so center is always truly centered */}
           <div
             className="hdr-mobile"
-            style={{ display: 'none', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}
+            style={{
+              display: 'none',
+              width: '100%',
+              alignItems: 'center',
+              gridTemplateColumns: '1fr auto 1fr',
+            }}
           >
-            <Link to="/" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none' }}>
-              <span style={{ fontSize: 'clamp(1.3rem, 5vw, 1.7rem)', fontWeight: 700, color: '#2c5f2d', lineHeight: 1.2 }}>
-                Vedique
-              </span>
-            </Link>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {/* Cart badge */}
-              <div style={{ position: 'relative', cursor: 'pointer' }}>
-                <ShoppingOutlined style={{ color: '#2c5f2d', fontSize: '1.2rem' }} />
+            {/* COL 1 — Left: Vedique name */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+              <Link to="/" style={{ textDecoration: 'none' }}>
                 <span style={{
-                  position: 'absolute', top: '-6px', right: '-6px',
-                  background: 'linear-gradient(135deg, #2c5f2d, #4caf4c)',
-                  color: '#fff', fontSize: '0.58rem', fontWeight: 700,
-                  width: '15px', height: '15px', borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>3</span>
-              </div>
+                  fontSize: 'clamp(1rem, 4.5vw, 1.45rem)',
+                  fontWeight: 700,
+                  color: '#2c5f2d',
+                  lineHeight: 1,
+                  whiteSpace: 'nowrap',
+                }}>
+                  Vedique
+                </span>
+              </Link>
+            </div>
 
+            {/* COL 2 — Center: 3 icon nav buttons */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 'clamp(0px, 1.5vw, 8px)',
+            }}>
+              {mobileQuickNav.map(({ Icon, label, path, badge }) => {
+                const active = isActive(path);
+                return (
+                  <motion.button
+                    key={path}
+                    whileTap={{ scale: 0.88 }}
+                    onClick={() => navigate(path)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 3,
+                      padding: 'clamp(4px, 1.5vw, 7px) clamp(6px, 2.5vw, 12px)',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: 10,
+                      cursor: 'pointer',
+                      position: 'relative',
+                    }}
+                  >
+                    <div style={{ position: 'relative' }}>
+                      <Icon style={{
+                        fontSize: 'clamp(1rem, 4vw, 1.25rem)',
+                        color: active ? '#1e4d20' : '#2c5f2d',
+                        display: 'block',
+                        transition: 'color 0.18s',
+                      }} />
+                      {badge && (
+                        <span style={{
+                          position: 'absolute',
+                          top: 'clamp(-7px, -1.8vw, -5px)',
+                          right: 'clamp(-8px, -2vw, -6px)',
+                          background: 'linear-gradient(135deg, #2c5f2d, #4caf4c)',
+                          color: '#fff',
+                          fontSize: 'clamp(0.45rem, 1.5vw, 0.55rem)',
+                          fontWeight: 700,
+                          width: 'clamp(12px, 3.5vw, 15px)',
+                          height: 'clamp(12px, 3.5vw, 15px)',
+                          borderRadius: '50%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          {badge}
+                        </span>
+                      )}
+                    </div>
+                    {/* Active underline */}
+                    <motion.span
+                      animate={{ opacity: active ? 1 : 0, scaleX: active ? 1 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{
+                        display: 'block',
+                        width: 'clamp(10px, 3vw, 16px)',
+                        height: 2,
+                        borderRadius: 1,
+                        background: '#2c5f2d',
+                        transformOrigin: 'center',
+                      }}
+                    />
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* COL 3 — Right: Hamburger */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
               <motion.button
                 onClick={() => setMobileMenuOpen(true)}
                 style={{
                   background: 'rgba(44,95,45,0.08)',
                   border: '1px solid rgba(44,95,45,0.15)',
                   color: '#2c5f2d',
-                  fontSize: '1.1rem',
+                  fontSize: 'clamp(0.9rem, 3.5vw, 1.1rem)',
                   cursor: 'pointer',
-                  padding: '7px 10px',
+                  padding: 'clamp(5px, 1.5vw, 7px) clamp(7px, 2vw, 10px)',
                   borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backdropFilter: 'blur(8px)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
                 }}
                 whileHover={{ scale: 1.08, background: 'rgba(44,95,45,0.14)' }}
                 whileTap={{ scale: 0.94 }}
@@ -341,47 +389,34 @@ const Header = () => {
         </div>
       </motion.header>
 
-      {/* ── MOBILE MENU ── */}
+      {/* ── MOBILE SLIDE-IN MENU (unchanged) ── */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               variants={backdropVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
+              initial="hidden" animate="visible" exit="exit"
               onClick={closeMenu}
               style={{
                 position: 'fixed', inset: 0,
                 background: 'rgba(20, 40, 20, 0.55)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
+                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
                 zIndex: 1090,
               }}
             />
 
-            {/* Anchored floating card */}
             <motion.div
               className="mob-menu-card"
               variants={mobileMenuVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
+              initial="hidden" animate="visible" exit="exit"
               style={{
-                position: 'fixed',
-                top: '104px',
-                left: '2.5vw',
-                right: '2.5vw',
-                margin: '0 auto',
-                width: 'min(420px, 95vw)',
-                maxHeight: '82vh',
-                zIndex: 1100,
+                position: 'fixed', top: '104px',
+                left: '2.5vw', right: '2.5vw',
+                margin: '0 auto', width: 'min(420px, 95vw)',
+                maxHeight: '82vh', zIndex: 1100,
                 background: 'linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(246,241,232,0.98) 100%)',
-                borderRadius: '24px',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
+                borderRadius: '24px', overflow: 'hidden',
+                display: 'flex', flexDirection: 'column',
                 border: '1px solid rgba(255,255,255,0.8)',
                 boxShadow: '0 25px 60px -15px rgba(0,0,0,0.2)',
               }}
@@ -395,27 +430,19 @@ const Header = () => {
               }}>
                 <Link to="/" style={{ textDecoration: 'none' }} onClick={closeMenu}>
                   <div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#2c5f2d', lineHeight: 1.1 }}>
-                      Vedique
-                    </div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#2c5f2d', lineHeight: 1.1 }}>Vedique</div>
                     <div style={{ fontSize: '0.6rem', color: '#5a8f5a', letterSpacing: '2.5px', textTransform: 'uppercase', marginTop: '2px' }}>
                       Nourish • Thrive • Glow
                     </div>
                   </div>
                 </Link>
-
                 <motion.button
                   onClick={closeMenu}
                   style={{
-                    background: 'rgba(44,95,45,0.08)',
-                    border: '1px solid rgba(44,95,45,0.14)',
-                    color: '#2c5f2d',
-                    fontSize: '1rem',
-                    cursor: 'pointer',
-                    width: '38px', height: '38px',
-                    borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
+                    background: 'rgba(44,95,45,0.08)', border: '1px solid rgba(44,95,45,0.14)',
+                    color: '#2c5f2d', fontSize: '1rem', cursor: 'pointer',
+                    width: '38px', height: '38px', borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}
                   whileHover={{ scale: 1.12, background: 'rgba(44,95,45,0.15)', rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
@@ -429,63 +456,42 @@ const Header = () => {
               {/* Nav Items */}
               <motion.nav
                 variants={navContainerVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
+                initial="hidden" animate="visible" exit="exit"
                 style={{ overflowY: 'auto', padding: '12px 20px', flex: 1 }}
               >
-                {menuItems.map((item, index) => {
+                {menuItems.map((item) => {
                   const active = isActive(item.path);
                   return (
                     <motion.div key={item.key} variants={navItemVariants}>
                       <Link
-                        to={item.path}
-                        onClick={closeMenu}
+                        to={item.path} onClick={closeMenu}
                         className="mob-nav-item"
                         style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          padding: '14px 16px',
-                          marginBottom: '6px',
-                          borderRadius: '14px',
+                          padding: '14px 16px', marginBottom: '6px', borderRadius: '14px',
                           textDecoration: 'none',
                           background: active
                             ? 'linear-gradient(135deg, rgba(44,95,45,0.1) 0%, rgba(76,175,76,0.07) 100%)'
                             : 'transparent',
-                          border: active
-                            ? '1px solid rgba(44,95,45,0.15)'
-                            : '1px solid transparent',
+                          border: active ? '1px solid rgba(44,95,45,0.15)' : '1px solid transparent',
                           transition: 'all 0.2s ease',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           <div style={{
                             width: '6px', height: '6px', borderRadius: '50%',
-                            background: active
-                              ? 'linear-gradient(135deg, #2c5f2d, #4caf4c)'
-                              : 'rgba(44,95,45,0.25)',
-                            flexShrink: 0,
-                            transition: 'background 0.2s ease',
+                            background: active ? 'linear-gradient(135deg, #2c5f2d, #4caf4c)' : 'rgba(44,95,45,0.25)',
+                            flexShrink: 0, transition: 'background 0.2s ease',
                           }} />
-                          <span
-                            className="mob-nav-label"
-                            style={{
-                              fontSize: '1rem', fontWeight: active ? 600 : 500,
-                              color: active ? '#1e4d20' : '#2c5f2d',
-                              letterSpacing: '0.2px',
-                              transition: 'color 0.2s ease',
-                            }}
-                          >
+                          <span className="mob-nav-label" style={{
+                            fontSize: '1rem', fontWeight: active ? 600 : 500,
+                            color: active ? '#1e4d20' : '#2c5f2d',
+                            letterSpacing: '0.2px', transition: 'color 0.2s ease',
+                          }}>
                             {item.label}
                           </span>
                         </div>
-                        <span
-                          className="mob-nav-arrow"
-                          style={{
-                            color: active ? '#2c5f2d' : '#9abf9a',
-                            fontSize: '0.85rem',
-                            fontWeight: 500,
-                          }}
-                        >→</span>
+                        <span className="mob-nav-arrow" style={{ color: active ? '#2c5f2d' : '#9abf9a', fontSize: '0.85rem', fontWeight: 500 }}>→</span>
                       </Link>
                     </motion.div>
                   );
@@ -495,8 +501,7 @@ const Header = () => {
               {/* Action Icons Row */}
               <div style={{
                 display: 'flex', gap: '14px', justifyContent: 'center',
-                padding: '14px 20px 10px',
-                borderTop: '1px solid rgba(44,95,45,0.08)',
+                padding: '14px 20px 10px', borderTop: '1px solid rgba(44,95,45,0.08)',
               }}>
                 {[
                   { Icon: SearchOutlined, label: 'Search' },
@@ -507,28 +512,20 @@ const Header = () => {
                     key={label}
                     style={{
                       flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
-                      background: 'rgba(44,95,45,0.05)',
-                      border: '1px solid rgba(44,95,45,0.1)',
-                      borderRadius: '12px', padding: '10px 8px',
-                      cursor: 'pointer', color: '#2c5f2d',
+                      background: 'rgba(44,95,45,0.05)', border: '1px solid rgba(44,95,45,0.1)',
+                      borderRadius: '12px', padding: '10px 8px', cursor: 'pointer', color: '#2c5f2d',
                     }}
                     whileHover={{ scale: 1.06, background: 'rgba(44,95,45,0.1)' }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <Icon style={{ fontSize: '1.15rem' }} />
-                    <span style={{ fontSize: '0.6rem', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                      {label}
-                    </span>
+                    <span style={{ fontSize: '0.6rem', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{label}</span>
                   </motion.button>
                 ))}
               </div>
 
-              {/* Footer — Social + Copyright */}
-              <div style={{
-                padding: '14px 20px 20px',
-                borderTop: '1px solid rgba(44,95,45,0.08)',
-                textAlign: 'center',
-              }}>
+              {/* Footer */}
+              <div style={{ padding: '14px 20px 20px', borderTop: '1px solid rgba(44,95,45,0.08)', textAlign: 'center' }}>
                 <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '12px' }}>
                   {[
                     { href: 'https://www.instagram.com/vediqueproducts', Icon: FaInstagram },
@@ -536,10 +533,7 @@ const Header = () => {
                     { href: 'https://www.facebook.com/profile.php?id=61586468189630', Icon: FaFacebookF },
                   ].map(({ href, Icon }) => (
                     <motion.a
-                      key={href}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      key={href} href={href} target="_blank" rel="noopener noreferrer"
                       style={{ color: '#5a8f5a', fontSize: '18px', display: 'flex' }}
                       whileHover={{ scale: 1.25, color: '#2c5f2d' }}
                       whileTap={{ scale: 0.9 }}

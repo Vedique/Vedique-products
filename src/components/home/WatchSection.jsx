@@ -114,6 +114,7 @@ const WatchSection = () => {
             linear-gradient(180deg, #f9f5ee 0%, #f4efe6 54%, #f8f3eb 100%);
           position: relative;
           overflow: hidden;
+          isolation: isolate;
         }
 
         .watch-section::before {
@@ -215,6 +216,7 @@ const WatchSection = () => {
           border: 1px solid rgba(255, 255, 255, 0.3);
           background: #111;
           box-shadow: 0 24px 48px rgba(24, 19, 13, 0.28);
+           transform: translateZ(0);
         }
 
         .reel-video-card::before {
@@ -349,6 +351,19 @@ const WatchSection = () => {
           .reels-scroll-wrapper::after { 
             display: none; 
           }
+
+          .watch-section {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+}
+
+.reel-video-card {
+  position: relative;
+  z-index: 1;
+  transform: translateZ(0);
+  will-change: transform;
+}
         }
       `}</style>
 
@@ -358,7 +373,7 @@ const WatchSection = () => {
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-50px" }}
           >
             <p className="section-eyebrow">Watch & Discover</p>
             <h2 className="section-heading">

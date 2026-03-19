@@ -93,7 +93,7 @@ export const videos = [
     id: 1,
     title: 'The Making of Black Kavuni',
     thumbnail: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?auto=format&fit=crop&w=800&q=80',
-    link: 'https://instagram.com/vedique/reel1'
+    link: 'https://www.instagram.com/reel/DV2G3r0k4Uu/?igsh=YnBta2s5eWx0dXc4'
   },
   {
     id: 2,

@@ -1,348 +1,331 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { products } from '../../data/products';
-import ProductCard from '../products/ProductCard';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-
-// Hardcoded complementary palettes for the dynamic background
-// If a product doesn't have a specific color, we fallback to these artisan tones
-const productPalettes = [
-  ['#B76E79', '#D4A5A9'], // Rose Gold / Berry
-  ['#8A9E96', '#AEC2B9'], // Sage Green
-  ['#E6B17E', '#F5CDA7'], // Warm Amber
-  ['#C5A48A', '#E0C8B8'], // Dusty Sand
-  ['#B29A8A', '#D0C2B6']  // Muted Taupe
-];
+import { motion } from 'framer-motion';
 
 const FeaturedProducts = () => {
   const navigate = useNavigate();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Mouse parallax for the active card
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  const [liked, setLiked] = useState({});
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  const handleNext = () => {
-    setActiveIndex((prev) => (prev + 1) % products.length);
+  const toggleLike = (id, e) => {
+    e.stopPropagation();
+    setLiked(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handlePrev = () => {
-    setActiveIndex((prev) => (prev - 1 + products.length) % products.length);
-  };
-
-  const currentColors = productPalettes[activeIndex % productPalettes.length];
-  const primaryColor = currentColors[0];
-  const secondaryColor = currentColors[1];
-
-  function handleMouseMove(e) {
-    if (isMobile) return;
-    const { clientX, clientY } = e;
-    const { innerWidth, innerHeight } = window;
-    const x = (clientX / innerWidth - 0.5) * 2; // -1 to 1
-    const y = (clientY / innerHeight - 0.5) * 2; // -1 to 1
-    mouseX.set(x);
-    mouseY.set(y);
-  }
-
-  function handleMouseLeave() {
-    mouseX.set(0);
-    mouseY.set(0);
-  }
+  // Featured = first 5 products
+  const [hero, ...grid] = products.slice(0, 5);
 
   return (
-    <section
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        position: 'relative',
-        minHeight: '100vh',
-        width: '100%',
-        overflow: 'hidden',
-        background: '#FAF8F6',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: isMobile ? '80px 0' : '100px 0'
-      }}
-    >
-      {/* --- Dynamic Immersive Background --- */}
-      <AnimatePresence>
-        <motion.div
-          key={activeIndex}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.5, ease: 'easeInOut' }}
-          style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            zIndex: 0,
-            pointerEvents: 'none'
-          }}
-        >
-          {/* Main Blobs */}
-          <motion.div
-            animate={{
-              scale: [1, 1.1, 1],
-              rotate: [0, 90, 0],
-              x: ['0%', '5%', '0%']
-            }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            style={{
-              position: 'absolute',
-              top: '-15%',
-              left: '-10%',
-              width: '60vw',
-              height: '60vw',
-              background: `radial-gradient(circle, ${primaryColor}15 0%, transparent 60%)`,
-              filter: 'blur(60px)'
-            }}
-          />
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, -90, 0],
-              y: ['0%', '10%', '0%']
-            }}
-            transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-            style={{
-              position: 'absolute',
-              bottom: '-20%',
-              right: '-10%',
-              width: '70vw',
-              height: '70vw',
-              background: `radial-gradient(circle, ${secondaryColor}15 0%, transparent 60%)`,
-              filter: 'blur(80px)'
-            }}
-          />
-        </motion.div>
-      </AnimatePresence>
+    <section style={{
+      background: '#f4f0e8',
+      padding: isMobile ? '48px 16px 52px' : '64px 32px 72px',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
 
-      <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '1200px', padding: '0 20px' }}>
+      {/* Subtle grain */}
+      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.04, pointerEvents: 'none' }}>
+        <filter id="g"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch" /><feColorMatrix type="saturate" values="0" /></filter>
+        <rect width="100%" height="100%" filter="url(#g)" />
+      </svg>
 
-        {/* Gen Z Artisan Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          style={{ textAlign: 'center', marginBottom: isMobile ? '60px' : '80px' }}
-        >
-          <motion.div
-            animate={{ color: [primaryColor, secondaryColor, primaryColor] }}
-            transition={{ duration: 4, repeat: Infinity }}
-            style={{
-              display: 'inline-block',
-              padding: '6px 20px',
-              border: `1px solid ${primaryColor}40`,
-              borderRadius: '50px',
-              fontSize: '0.75rem',
-              letterSpacing: '0.3em',
-              textTransform: 'uppercase',
-              fontWeight: 700,
-              marginBottom: '20px',
-              background: 'rgba(255, 255, 255, 0.5)',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            Curated For You
-          </motion.div>
-          <h2 style={{
-            fontSize: isMobile ? '3rem' : '4.5rem',
-            fontFamily: 'Cormorant Garamond, serif',
-            fontWeight: 200,
-            color: '#1A1A1A',
-            lineHeight: 1,
-            margin: 0,
-            letterSpacing: '-0.02em'
-          }}>
-            Featured <span style={{ fontStyle: 'italic', fontWeight: 300, color: primaryColor, transition: 'color 1.5s ease' }}>Harvest</span>
-          </h2>
-        </motion.div>
-
-        {/* 3D Coverflow Carousel */}
-        <div style={{
-          position: 'relative',
-          height: isMobile ? '450px' : '550px',
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          perspective: '1200px', // Crucial for 3D depth
-          transformStyle: 'preserve-3d'
-        }}>
-          {products.map((product, index) => {
-            // Calculate relative position (-2 to +2 in view)
-            let offset = index - activeIndex;
-            // Handle wrap-around for infinite feel (basic implementation)
-            if (offset > products.length / 2) offset -= products.length;
-            if (offset < -products.length / 2) offset += products.length;
-
-            const MathAbsOffset = Math.abs(offset);
-            const isActive = offset === 0;
-
-            // Only render cards that are somewhat close to the active index to save DOM nodes
-            if (MathAbsOffset > 2 && !isMobile) return null;
-            if (MathAbsOffset > 1 && isMobile) return null;
-
-            // 3D Transforms based on offset
-            const translateX = isMobile ? `${offset * 70}%` : `${offset * 120}px`;
-            const translateZ = isActive ? '50px' : `${-MathAbsOffset * 100}px`;
-            const rotateY = isActive ? 0 : offset > 0 ? -15 : 15;
-            const opacity = isActive ? 1 : 1 - MathAbsOffset * 0.4;
-            const zIndex = 10 - MathAbsOffset;
-            const blur = isActive ? 'blur(0px)' : `blur(${MathAbsOffset * 3}px)`;
-
-            // Parallax values for active card
-            const rx = useTransform(mouseY, [-1, 1], [10, -10]);
-            const ry = useTransform(mouseX, [-1, 1], [-10, 10]);
-
-            return (
-              <motion.div
-                key={product.id || index}
-                onClick={() => {
-                  if (isActive) {
-                    navigate(`/product/${product.slug}`);
-                  } else {
-                    setActiveIndex(index);
-                  }
-                }}
-                animate={{
-                  x: translateX,
-                  z: translateZ,
-                  rotateY: rotateY,
-                  opacity: opacity,
-                  filter: blur
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 100,
-                  damping: 15,
-                  mass: 0.8
-                }}
-                style={{
-                  position: 'absolute',
-                  zIndex: zIndex,
-                  width: isMobile ? '280px' : '360px',
-                  cursor: isActive ? 'pointer' : 'pointer',
-                  // Only apply mouse parallax to active card
-                  rotateX: isActive && !isMobile ? rx : 0,
-                  rotateY: isActive && !isMobile ? ry : rotateY,
-                }}
-                drag={isMobile ? "x" : false}
-                dragConstraints={{ left: 0, right: 0 }}
-                onDragEnd={(e, { offset, velocity }) => {
-                  const swipe = Math.abs(offset.x) * velocity.x;
-                  if (swipe < -100 || offset.x < -50) handleNext();
-                  else if (swipe > 100 || offset.x > 50) handlePrev();
-                }}
-              >
-                {/* Wrap ProductCard to ensure it scales correctly inside our 3D container */}
-                <div style={{
-                  pointerEvents: isActive ? 'auto' : 'none',
-                  boxShadow: isActive ? `0 20px 50px -15px ${primaryColor}50` : 'none',
-                  borderRadius: '16px',
-                  transition: 'box-shadow 0.4s ease',
-                  background: 'white' // Ensure background is solid for coverflow masking
-                }}>
-                  <ProductCard product={product} compact={isMobile} />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Custom Navigation & Indicators */}
-        <div style={{
-          marginTop: '40px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '24px'
-        }}>
-          {/* Arrow Controls (Desktop mainly) */}
-          {!isMobile && (
-            <div style={{ display: 'flex', gap: '20px' }}>
-              <motion.button
-                onClick={handlePrev}
-                whileHover={{ x: -5, scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  width: '50px', height: '50px',
-                  borderRadius: '50%', border: `1px solid ${primaryColor}50`,
-                  background: 'transparent', color: primaryColor,
-                  cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                  transition: 'border-color 0.4s ease, color 0.4s ease'
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
-              </motion.button>
-              <motion.button
-                onClick={handleNext}
-                whileHover={{ x: 5, scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  width: '50px', height: '50px',
-                  borderRadius: '50%', border: `1px solid ${primaryColor}50`,
-                  background: 'transparent', color: primaryColor,
-                  cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                  transition: 'border-color 0.4s ease, color 0.4s ease'
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
-              </motion.button>
-            </div>
-          )}
-
-          {/* Dots Indicator */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {products.map((_, idx) => (
-              <motion.div
-                key={idx}
-                onClick={() => setActiveIndex(idx)}
-                style={{
-                  width: idx === activeIndex ? '30px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: idx === activeIndex ? primaryColor : `${primaryColor}40`,
-                  cursor: 'pointer',
-                  transition: 'background 0.4s ease'
-                }}
-                animate={{ width: idx === activeIndex ? 30 : 8 }}
-              />
-            ))}
+      {/* Section header */}
+      <div style={{ maxWidth: 960, margin: '0 auto', position: 'relative', zIndex: 2 }}>
+        <div style={{ marginBottom: isMobile ? 28 : 36, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <p style={{
+              margin: '0 0 6px',
+              fontSize: '0.58rem', fontWeight: 700,
+              letterSpacing: '0.18em', textTransform: 'uppercase',
+              color: '#9e8464', fontFamily: 'system-ui',
+            }}>
+              ✦ &nbsp; Handpicked For You
+            </p>
+            <h2 style={{
+              margin: 0,
+              fontSize: isMobile ? 'clamp(1.8rem, 6vw, 2.2rem)' : '2.6rem',
+              fontWeight: 300, color: '#1c2b1e',
+              fontFamily: 'Georgia, serif', lineHeight: 1.1,
+              letterSpacing: '-0.02em',
+            }}>
+              Featured <em style={{ fontWeight: 600, fontStyle: 'italic', color: '#2d5a3a' }}>Products</em>
+            </h2>
           </div>
 
-          {/* Call to Action */}
           <motion.button
-            whileHover={{ scale: 1.03, boxShadow: `0 15px 30px -10px ${primaryColor}60` }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/products')}
             style={{
-              marginTop: '10px',
-              padding: '16px 40px',
-              background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-              color: 'white',
-              border: 'none',
-              borderRadius: '100px',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: 'background 1.5s ease', // Smooth gradient color shift
-              boxShadow: `0 10px 20px -8px ${primaryColor}40`
+              padding: '10px 22px',
+              background: 'transparent',
+              border: '1px solid rgba(45,90,58,0.35)',
+              fontSize: '0.65rem', fontWeight: 600,
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              color: '#2d5a3a', cursor: 'pointer',
+              fontFamily: 'system-ui', borderRadius: 0,
             }}
           >
-            Explore All Harvest
+            View All →
+          </motion.button>
+        </div>
+
+        {/* ── GRID LAYOUT ── */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr 1fr' : '1.6fr 1fr 1fr',
+          gridTemplateRows: isMobile ? 'auto' : 'auto auto',
+          gap: isMobile ? 10 : 14,
+        }}>
+
+          {/* HERO CARD — spans 2 rows on desktop, full width row on mobile */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            whileHover={{ y: -3 }}
+            onClick={() => navigate(`/product/${hero.id}`)}
+            style={{
+              gridRow: isMobile ? 'auto' : '1 / 3',
+              gridColumn: isMobile ? '1 / 3' : '1',
+              background: '#fff',
+              borderRadius: 16,
+              overflow: 'hidden',
+              cursor: 'pointer',
+              boxShadow: '0 4px 24px -4px rgba(28,43,30,0.12)',
+              border: '1px solid rgba(28,43,30,0.06)',
+              position: 'relative',
+            }}
+          >
+            {/* Product image */}
+            <div style={{
+              height: isMobile ? 220 : 320,
+              background: 'linear-gradient(135deg, #e8f0e4, #d4e4cc)',
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {hero.image && (
+                <img
+                  src={hero.image}
+                  alt={hero.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              )}
+              {/* Featured badge */}
+              <div style={{
+                position: 'absolute', top: 14, left: 14,
+                background: '#2d5a3a', color: '#c8a96e',
+                fontSize: '0.55rem', fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                padding: '5px 11px', fontFamily: 'system-ui',
+              }}>
+                Best Pick
+              </div>
+              {/* Like */}
+              <motion.button
+                whileTap={{ scale: 0.8 }}
+                onClick={(e) => toggleLike(hero.id, e)}
+                style={{
+                  position: 'absolute', top: 12, right: 12,
+                  width: 34, height: 34, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.9)',
+                  border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.9rem',
+                }}
+              >
+                {liked[hero.id] ? '❤️' : '🤍'}
+              </motion.button>
+            </div>
+
+            {/* Info */}
+            <div style={{ padding: isMobile ? '14px 16px 18px' : '18px 22px 22px' }}>
+              <p style={{
+                margin: '0 0 4px',
+                fontSize: '0.58rem', fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: '#9e8464', fontFamily: 'system-ui',
+              }}>
+                {hero.category}
+              </p>
+              <h3 style={{
+                margin: '0 0 6px',
+                fontSize: isMobile ? '1.15rem' : '1.4rem',
+                fontWeight: 400, color: '#1c2b1e',
+                fontFamily: 'Georgia, serif', lineHeight: 1.2,
+              }}>
+                {hero.name}
+              </h3>
+              <p style={{
+                margin: '0 0 14px',
+                fontSize: '0.78rem', color: '#7a7060',
+                fontFamily: 'system-ui', fontWeight: 300,
+                lineHeight: 1.55,
+              }}>
+                {hero.description?.substring(0, isMobile ? 60 : 90)}…
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#2d5a3a', fontFamily: 'Georgia, serif' }}>
+                    ₹{hero.price}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#bbb', textDecoration: 'line-through', fontFamily: 'system-ui' }}>
+                    ₹{Math.round(hero.price * 1.15)}
+                  </span>
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/product/${hero.id}`); }}
+                  style={{
+                    padding: '9px 18px',
+                    background: '#2d5a3a', color: '#c8a96e',
+                    border: 'none', borderRadius: 0,
+                    fontSize: '0.62rem', fontWeight: 700,
+                    letterSpacing: '0.1em', textTransform: 'uppercase',
+                    cursor: 'pointer', fontFamily: 'system-ui',
+                  }}
+                >
+                  Shop
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* GRID CARDS */}
+          {grid.map((product, i) => (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: i * 0.07 }}
+              whileHover={{ y: -3 }}
+              onClick={() => navigate(`/product/${product.id}`)}
+              style={{
+                background: '#fff',
+                borderRadius: 14,
+                overflow: 'hidden',
+                cursor: 'pointer',
+                boxShadow: '0 2px 16px -4px rgba(28,43,30,0.1)',
+                border: '1px solid rgba(28,43,30,0.05)',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {/* Image */}
+              <div style={{
+                height: isMobile ? 130 : 160,
+                background: i % 3 === 0
+                  ? 'linear-gradient(135deg, #f0ede4, #e4ddd0)'
+                  : i % 3 === 1
+                    ? 'linear-gradient(135deg, #e4ede4, #d0e4d8)'
+                    : 'linear-gradient(135deg, #ede8e0, #e0d8cc)',
+                position: 'relative', overflow: 'hidden', flexShrink: 0,
+              }}>
+                {product.image && (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                )}
+                <motion.button
+                  whileTap={{ scale: 0.75 }}
+                  onClick={(e) => toggleLike(product.id, e)}
+                  style={{
+                    position: 'absolute', top: 8, right: 8,
+                    width: 28, height: 28, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.9)',
+                    border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  {liked[product.id] ? '❤️' : '🤍'}
+                </motion.button>
+              </div>
+
+              {/* Info */}
+              <div style={{ padding: '11px 13px 13px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <p style={{
+                    margin: '0 0 2px',
+                    fontSize: '0.52rem', fontWeight: 700,
+                    letterSpacing: '0.1em', textTransform: 'uppercase',
+                    color: '#9e8464', fontFamily: 'system-ui',
+                  }}>
+                    {product.category}
+                  </p>
+                  <h4 style={{
+                    margin: '0 0 8px',
+                    fontSize: isMobile ? '0.82rem' : '0.92rem',
+                    fontWeight: 400, color: '#1c2b1e',
+                    fontFamily: 'Georgia, serif', lineHeight: 1.25,
+                  }}>
+                    {product.name}
+                  </h4>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#2d5a3a', fontFamily: 'Georgia, serif' }}>
+                    ₹{product.price}
+                  </span>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/product/${product.id}`); }}
+                    style={{
+                      padding: '6px 12px',
+                      background: 'transparent',
+                      border: '1px solid rgba(45,90,58,0.3)',
+                      borderRadius: 0,
+                      fontSize: '0.58rem', fontWeight: 600,
+                      letterSpacing: '0.08em', textTransform: 'uppercase',
+                      color: '#2d5a3a', cursor: 'pointer', fontFamily: 'system-ui',
+                    }}
+                  >
+                    Add
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Bottom strip */}
+        <div style={{
+          marginTop: isMobile ? 24 : 32,
+          padding: isMobile ? '16px 20px' : '18px 28px',
+          background: '#2d5a3a',
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+        }}>
+          <p style={{
+            margin: 0,
+            fontSize: '0.72rem', color: 'rgba(200,169,110,0.85)',
+            fontFamily: 'Georgia, serif', fontWeight: 300,
+            fontStyle: 'italic',
+          }}>
+            Small batch · Made fresh · No shortcuts
+          </p>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate('/products')}
+            style={{
+              padding: '9px 22px',
+              background: '#c8a96e', border: 'none',
+              borderRadius: 0, color: '#1c2b1e',
+              fontSize: '0.62rem', fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              cursor: 'pointer', fontFamily: 'system-ui',
+            }}
+          >
+            Shop All Products
           </motion.button>
         </div>
       </div>
