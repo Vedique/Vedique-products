@@ -22,7 +22,7 @@ const ProductsPage = () => {
   }, [activeCategory])
 
   return (
-    <section className="section-padding pt-40 overflow-x-hidden md:pt-48" id="products">
+    <section className="section-padding overflow-x-hidden" style={{ paddingTop: 'clamp(6rem, 12vw, 12rem)' }} id="products">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 16 }}

@@ -195,7 +195,7 @@ const AboutPage = () => {
               custom={2}
               className="mt-8 max-w-md mx-auto text-lg text-muted-foreground font-light"
             >
-              ancient recipes. zero fluff. just the good stuff — sourced, tested, and made with intention.
+              ancient recipes. zero fluff. just the good stuff - sourced, tested, and made with intention.
             </motion.p>
           </motion.div>
         </div>

@@ -13,7 +13,7 @@ const ProductPage = () => {
   const thumbnailRef = useRef(null)
 
   if (!product) {
-    return <div className="pt-20 text-center md:pt-24">Product not found</div>
+    return <div className="pt-24 text-center md:pt-24">Product not found</div>
   }
 
   // Use images array if available, otherwise create array with single image
@@ -139,7 +139,7 @@ const ProductPage = () => {
   ]
 
   return (
-    <div className="section-padding pt-20 md:pt-24">
+    <div className="section-padding" style={{ paddingTop: 'clamp(6rem, 12vw, 7rem)' }}>
       {contextHolder}
       <div className="container-custom">
        <div style={{ marginBottom: '1rem' }}>

@@ -5,7 +5,7 @@ const videos = [
   {
     id: 1,
     type: 'youtube',
-    videoId: 'X2GC2U9_jkw',
+    videoId: '8bZb7ElF-HM',
     title: 'Black rice',
     tag: 'Black Rice',
     source: 'YouTube',
@@ -390,9 +390,9 @@ const WatchSection = () => {
                 <motion.div
                   key={video.id}
                   className="reel-card-item"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: index * 0.08, ease: 'easeOut' }}
                   viewport={{ once: true }}
                 >
                   <AutoPlayVideoCard video={video} />

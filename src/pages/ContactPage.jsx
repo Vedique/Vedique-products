@@ -21,7 +21,7 @@ const ContactPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fcfdfc] pb-12 pt-20 md:pt-28">
+    <div className="min-h-screen bg-[#fcfdfc] pb-12 pt-24 md:pt-28">
       {contextHolder}
       <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
         

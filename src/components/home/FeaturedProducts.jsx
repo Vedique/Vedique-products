@@ -91,7 +91,7 @@ const FeaturedProducts = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
             whileHover={{ y: -3 }}
-            onClick={() => navigate(`/product/${hero.id}`)}
+            onClick={() => navigate(`/product/${hero.slug}`)}
             style={{
               gridRow: isMobile ? 'auto' : '1 / 3',
               gridColumn: isMobile ? '1 / 3' : '1',
@@ -181,7 +181,7 @@ const FeaturedProducts = () => {
                 </div>
                 <motion.button
                   whileTap={{ scale: 0.96 }}
-                  onClick={(e) => { e.stopPropagation(); navigate(`/product/${hero.id}`); }}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/product/${hero.slug}`); }}
                   style={{
                     padding: '9px 18px',
                     background: '#2d5a3a', color: '#c8a96e',
@@ -206,7 +206,7 @@ const FeaturedProducts = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.45, delay: i * 0.07 }}
               whileHover={{ y: -3 }}
-              onClick={() => navigate(`/product/${product.id}`)}
+              onClick={() => navigate(`/product/${product.slug}`)}
               style={{
                 background: '#fff',
                 borderRadius: 14,
@@ -278,7 +278,7 @@ const FeaturedProducts = () => {
                   </span>
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    onClick={(e) => { e.stopPropagation(); navigate(`/product/${product.id}`); }}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/product/${product.slug}`); }}
                     style={{
                       padding: '6px 12px',
                       background: 'transparent',
